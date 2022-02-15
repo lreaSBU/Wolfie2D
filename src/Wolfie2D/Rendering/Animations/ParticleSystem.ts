@@ -1,4 +1,3 @@
-import { HW4_Events } from "../../../Homework4/hw4_enums";
 import Updateable from "../../DataTypes/Interfaces/Updateable";
 import Vec2 from "../../DataTypes/Vec2";
 import { GraphicType } from "../../Nodes/Graphics/GraphicTypes";
