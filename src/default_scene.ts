@@ -2,11 +2,13 @@
 // Import from Wolfie2D or your own files here
 import Vec2 from "./Wolfie2D/DataTypes/Vec2";
 import Input from "./Wolfie2D/Input/Input";
+import { TweenableProperties } from "./Wolfie2D/Nodes/GameNode";
 import Graphic from "./Wolfie2D/Nodes/Graphic";
 import { GraphicType } from "./Wolfie2D/Nodes/Graphics/GraphicTypes";
 import Sprite from "./Wolfie2D/Nodes/Sprites/Sprite";
 import Scene from "./Wolfie2D/Scene/Scene";
 import Color from "./Wolfie2D/Utils/Color";
+import { EaseFunctionType } from "./Wolfie2D/Utils/EaseFunctions";
 
 
 /* #################### CLASS DEFINITION #################### */
@@ -66,6 +68,8 @@ export default class default_scene extends Scene {
 
         // Now, let's change the color of our player
         this.player.color = Color.ORANGE;
+
+        this.receiver.subscribe("END")
     }
 
     // updateScene() is where you can handle any frame by frame updates to your scene.
@@ -75,6 +79,33 @@ export default class default_scene extends Scene {
     updateScene(deltaT: number): void {
         // For our update, lets create a basic player controller
         // First, lets handle the input
+        if (Input.isKeyPressed("1")) {
+            this.player.tweens.add("fade", {
+                startDelay: 0,
+                duration: 1000,
+                effects: [
+                    {
+                        property: TweenableProperties.alpha,
+                        resetOnComplete: true,
+                        start: 1,
+                        end: 0,
+                        ease: EaseFunctionType.IN_OUT_QUAD
+                    }
+                ],
+                onEnd: "END",
+                onEndData: {
+                    other: this.player.boundary,
+                    other2: this.player
+                }
+            });
+            this.player.tweens.play("fade");
+        }
+
+        while (this.receiver.hasNextEvent()) {
+            let event = this.receiver.getNextEvent();
+            console.log(event.data);
+        }
+
         const direction = Vec2.ZERO;
 
         // Sum the x-direction keys
