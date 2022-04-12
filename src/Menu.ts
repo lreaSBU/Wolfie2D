@@ -1,5 +1,6 @@
 import default_scene from "./default_scene";
 import Vec2 from "./Wolfie2D/DataTypes/Vec2";
+import { GraphicType } from "./Wolfie2D/Nodes/Graphics/GraphicTypes";
 import Label from "./Wolfie2D/Nodes/UIElements/Label";
 import { UIElementType } from "./Wolfie2D/Nodes/UIElements/UIElementTypes";
 import Layer from "./Wolfie2D/Scene/Layer";
@@ -21,8 +22,11 @@ export default class Menu extends Scene {
         // The main menu
         this.mainMenu = this.addUILayer("mainMenu");
 
+        //const logo = this.add.sprite("./dist/images/KillBallLogo.png", "mainMenu");
+        //logo.size.set(200, 50);
+
         // Add play button, and give it an event to emit on press
-        const play = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y - 100), text: "Play"});
+        const play = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y - 100), text: "New Game"});
         play.size.set(200, 50);
         play.borderWidth = 2;
         play.borderColor = Color.WHITE;
@@ -30,7 +34,7 @@ export default class Menu extends Scene {
         play.onClickEventId = "play";
 
         // Add about button
-        const about = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y + 100), text: "About"});
+        const about = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y + 100), text: "Credits"});
         about.size.set(200, 50);
         about.borderWidth = 2;
         about.borderColor = Color.WHITE;
@@ -41,13 +45,13 @@ export default class Menu extends Scene {
         this.about = this.addUILayer("about");
         this.about.setHidden(true);
 
-        const aboutHeader = <Label>this.add.uiElement(UIElementType.LABEL, "about", {position: new Vec2(center.x, center.y - 250), text: "About"});
+        const aboutHeader = <Label>this.add.uiElement(UIElementType.LABEL, "about", {position: new Vec2(center.x, center.y - 250), text: "Credits"});
         aboutHeader.textColor = Color.WHITE;
 
         // HOMEWORK 4 - TODO: Give yourself credit and add your name to the about page!
-        const text1 = "This game was created by Liam Rea";
-        const text2 = "using the Wolfie2D game engine, a TypeScript game engine created by";
-        const text3 = "Joe Weaver and Richard McKenna.";
+        const text1 = "Kill Ball";
+        const text2 = "A Wolfie2D game by Liam Rea, Andy Zhang, and Edmod Zhou";
+        const text3 = "";
 
         const line1 = <Label>this.add.uiElement(UIElementType.LABEL, "about", {position: new Vec2(center.x, center.y - 50), text: text1});
         const line2 = <Label>this.add.uiElement(UIElementType.LABEL, "about", {position: new Vec2(center.x, center.y), text: text2});
@@ -86,14 +90,13 @@ export default class Menu extends Scene {
         const controlHeader = <Label>this.add.uiElement(UIElementType.LABEL, "control", {position: new Vec2(center.x, center.y - 250), text: "Controls"});
         controlHeader.textColor = Color.WHITE;
 
-        // HOMEWORK 4 - TODO: Give yourself credit and add your name to the control page!
         //const ctext1 = "WASD to move";
-        const ctext2 = "Q :: drop current item";
-        const ctext3 = "E :: pick up item";
-        const ctext5 = "RIGHT MOUSE :: walk to cursor location";
-        const ctext6 = "1 OR 2 :: change current item";
-        const ctext7 = "Z :: swap to player 1";
-        const ctext8 = "X :: swap to player 2";
+        const ctext2 = "WASD :: Move (Double Tap to Dash)";
+        const ctext3 = "Q :: Toss Ball (Hold to Throw Harder)";
+        const ctext5 = "LEFT MOUSE :: Kick Ball (Hold to Build Power)";
+        const ctext6 = "SPACE :: Jump";
+        const ctext7 = "SHIFT :: Parry";
+        const ctext8 = "NUM 1-3 :: Swap Ball (not implemented yet)";
 
         //const cline1 = <Label>this.add.uiElement(UIElementType.LABEL, "control", {position: new Vec2(center.x, center.y - 200), text: ctext1});
         const cline2 = <Label>this.add.uiElement(UIElementType.LABEL, "control", {position: new Vec2(center.x, center.y - 100), text: ctext2});
