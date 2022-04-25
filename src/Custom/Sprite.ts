@@ -1,4 +1,5 @@
 import default_scene from "../default_scene";
+import Spritesheet from "../Wolfie2D/DataTypes/Spritesheet";
 import Proj from "./Proj";
 
 export default class Sprite{
@@ -8,6 +9,7 @@ export default class Sprite{
 
     public static Loaded: any[] = [];
     public static List: Sprite[] = [];
+    public static UIList: Sprite[] = [];
     private static genString: string;
     public static genEx: any[];
     public static genImg: any;
@@ -20,6 +22,7 @@ export default class Sprite{
     public r: number = 0;
     public flip: boolean;
     public hidden: boolean;
+    public ui: boolean = false;
     public x: number = 0;
     public y: number = 0;
     public alpha: number = 1;
@@ -60,12 +63,32 @@ export default class Sprite{
         Sprite.genEx[i].src = (g ? 'images/~' : 'images/') + s;
         default_scene.toLoad++;
     }
+    clone(i: any, x = 0, y = 0){
+        var ret = new Sprite(null, false, -1, x, y);
+        ret.frames[0] = i;
+    }
+    setUI(){
+        this.del();
+        this.ui = true;
+        Sprite.UIList.push(this);
+    }
+    static LoadStatic(s: string, siz = Sprite.size){
+        var img = new Image(siz, siz);
+        img.onload = function(){default_scene.toLoad--; Sprite.Loaded.push(this);}
+        img.src = 'images/' + s + '.png';
+        default_scene.toLoad++;
+        return Sprite.Loaded.length; //index of where the loaded image will go --> CANNOT USE IMMEDIATELY!!!
+    }
     static haveLoaded(s: string){
         for(var l of Sprite.Loaded) if(l.src == s) return l;
         return undefined;
     }
     static Run(del: number){
         for(var s of Sprite.List) s.run(del);
+        default_scene.ctx.globalAlpha = 1;
+    }
+    static UIRun(del: number){
+        for(var s of Sprite.UIList) s.run(del);
         default_scene.ctx.globalAlpha = 1;
     }
     run(del: number){
@@ -87,7 +110,8 @@ export default class Sprite{
         }
         if(this.hidden) return;
         default_scene.ctx.globalAlpha = this.alpha;
-        default_scene.ctx.drawImage(this.flip ? this.flips[this.frame] : this.frames[this.frame], this.x+this.sx-default_scene.camX-default_scene.shCamX, this.y+this.sy-default_scene.camY-default_scene.shCamY);
+        if(this.ui) default_scene.ctx.drawImage(this.flip ? this.flips[this.frame] : this.frames[this.frame], this.x+this.sx, this.y+this.sy);
+        else default_scene.ctx.drawImage(this.flip ? this.flips[this.frame] : this.frames[this.frame], this.x+this.sx-default_scene.camX-default_scene.shCamX, this.y+this.sy-default_scene.camY-default_scene.shCamY);
         //console.log(this.toString() + "::: " + default_scene.camX + ", " + default_scene.camY);
     }
     del(){
@@ -96,6 +120,7 @@ export default class Sprite{
     }
     removeProj(){
         if(this.p) this.p.del();
+        this.p = undefined;
     }
     hide(){
         this.hidden = true;

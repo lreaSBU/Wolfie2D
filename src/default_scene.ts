@@ -5,6 +5,8 @@ import Particle from "./Custom/Particle";
 import Enemy from "./Custom/Enemy";
 import CanvasRenderer from "./Wolfie2D/Rendering/CanvasRenderer";
 import Input from "./Wolfie2D/Input/Input";
+import PlayerController from "./demos/PlatformerPlayerController";
+import Spritesheet from "./Wolfie2D/DataTypes/Spritesheet";
 
 export default class default_scene extends Scene{
     public size: number = 32;
@@ -15,6 +17,7 @@ export default class default_scene extends Scene{
     public static camY: number = 0;
     public static shCamX: number = 0;
     public static shCamY: number = 0;
+    public static hp: number = 3;
 
     public static key: boolean[] = [];
     public static pey: boolean[] = [];
@@ -32,8 +35,9 @@ export default class default_scene extends Scene{
     public Ball: Sprite;
     public kBall: Sprite;
     public dTrail: Sprite[] = [];
+    public static dots: Sprite[] = [];
 
-    public static kl: Proj;
+    public static kl: Proj = undefined;
 
     public static genX: number;
     public static genY: number;
@@ -43,13 +47,15 @@ export default class default_scene extends Scene{
     public hcw: number; // QID??
     public hch: number;
     public kicking: number = 0;
-    public curve: number = 0;
-    public dashing: number = -1;
+    public static curveX: number = 0;
+    public static curveY: number = 0;
+    private static curveL: number;
+    public static dashing: number = -1;
     public dashCool: number = 0;
     public dashV: number;
     public throwing: number = 0;
     public static parrying: number = -1;
-    public static parryCool: number = 0;
+    public static parryCool: number = -1;
     public walking: number = 5;
     public walk: number;
     public wf: number = 2;
@@ -58,6 +64,8 @@ export default class default_scene extends Scene{
     public thl: number;
     public static vx: number = 0;
     public static vy: number = 0;
+    public static px: number = 0;
+    public static py: number = 0;
     public dashX: number = 0;
     public dashY: number = 0;
     public static mw: number;
@@ -76,12 +84,15 @@ export default class default_scene extends Scene{
     public static qid: number[][];
     public doubles: number[] = [87, 65, 83, 68, 0, 0, 0, 0];
     public ammo: number[] = [-1, 0, 0];
-
+    
+    public static hearts: Sprite[] = [];
+    public static weapons: Sprite[] = [];
 
     public static hasBall: boolean = true;
+    public static isCurving: number = 0;
     public grounded: boolean = true;
     public hk: boolean = false;
-    public kp: boolean;
+    public static kp: boolean;
 
     loadScene(): void {
         //this.load.image("logo", "demo_assets/images/wolfie2d_text.png");
@@ -98,13 +109,21 @@ export default class default_scene extends Scene{
             default_scene.key.push(false);
             default_scene.pey.push(false);
         }
-        window.addEventListener("keydown", function (e){default_scene.pey[e.keyCode] = !default_scene.key[e.keyCode]; default_scene.key[e.keyCode] = true;}, true);
-        window.addEventListener("keyup", function (e){default_scene.key[e.keyCode] = false;}, true);
+        window.addEventListener("keydown", function(e){default_scene.pey[e.keyCode] = !default_scene.key[e.keyCode]; default_scene.key[e.keyCode] = true;}, true);
+        window.addEventListener("keyup", function(e){default_scene.key[e.keyCode] = false;}, true);
         window.addEventListener('mousedown', function(e){default_scene.pey[229 + e.which] = !default_scene.key[229 + e.which]; default_scene.key[229 + e.which] = true;}, true);
         window.addEventListener('mouseup', function(e){default_scene.key[229 + e.which] = false;}, true); //230 = left mouse, 231 = middle, 232 = right mouse.
         window.addEventListener("mousemove", function(e){
-            //if(key[16] && kp) curve += e.clientX - mr.left - size - mouseX, console.log(curve);
-            default_scene.mouseX = e.clientX - default_scene.mr.left - Sprite.size, default_scene.mouseY = e.clientY - default_scene.mr.top - Sprite.size;
+            if(default_scene.key[16]){
+                default_scene.curveX = e.clientX - default_scene.mr.left - Sprite.size - default_scene.mouseX;
+                default_scene.curveY = e.clientY - default_scene.mr.top - Sprite.size - default_scene.mouseY;
+                default_scene.curveL = Math.sqrt(default_scene.curveX*default_scene.curveX + default_scene.curveY*default_scene.curveY);
+                default_scene.curveX /= default_scene.curveL; default_scene.curveY /= default_scene.curveL;
+                default_scene.curveX *= 5; default_scene.curveY *= 5;
+                default_scene.isCurving = 10;
+            }
+            else if(default_scene.isCurving > 0) default_scene.isCurving--;
+            else default_scene.mouseX = e.clientX - default_scene.mr.left - Sprite.size, default_scene.mouseY = e.clientY - default_scene.mr.top - Sprite.size;
         });
         //this.addLayer("primary", 1);
         //console.log("TEST CTX::: " + default_scene.ctx);
@@ -114,6 +133,24 @@ export default class default_scene extends Scene{
         this.Count = new Sprite("count", false, 3);
         this.Count.hide();
         this.kBall.hide();
+        for(var i = 0; i < default_scene.hp; i++){
+            default_scene.hearts.push(new Sprite("heart", false, 2, Sprite.hSize*1.1*i));
+            default_scene.hearts[i].setUI();
+        }
+        /*
+        default_scene.weapons.push(new Sprite("grenade", false, 2));
+        default_scene.weapons.push(new Sprite("sword", false, 2));
+        for(var i = 0; i < default_scene.weapons.length; i++){
+            
+        }
+        */
+
+        Sprite.LoadStatic("spit", Sprite.hSize);
+
+        for(var i = 0; i < 10; i++){
+            default_scene.dots.push(new Sprite("aim"));
+            default_scene.dots[i].hidden = true;
+        }
 
         //default_scene.ctx.rect(0, 0, 500, 500);
         //default_scene.ctx.fill();
@@ -121,7 +158,7 @@ export default class default_scene extends Scene{
         //var test = new Enemy(300, 100, 0);
 
         //this.build(this.load.getObject("level1").toString());
-        this.build('                                 ,                                 ,-                          -     ,    -   -                0-      ,            -       -    -       ,                    --  -        ,------------------------------- -');
+        this.build('                                 ,                                 ,                                 ,                                 ,                                 ,                                 ,                                 ,                                 ,                                 ,                                 ,                                 ,                                 ,                                 ,                             ___-,                                -,                                -,                                -,                                -,                                -,                                -,                                -,                                -,            -                   -,-          --            0      -,---------------------------------');
     }
 
     updateScene(delta: number): void {
@@ -129,17 +166,17 @@ export default class default_scene extends Scene{
         this.del = delta*50;
         //if(this.del > .9) return; //throw away long frames???
         default_scene.ctx.clearRect(0, 0, this.cw, this.ch);
-        this.kp = this.kicking <= 0 || this.kicking > 290 || !this.hk;
-        if(this.kp) if(this.dashing > 0){
-            this.dashV = this.dashing / 3;
+        default_scene.kp = this.kicking <= 0 || this.kicking > 290 || !this.hk;
+        if(default_scene.kp) if(default_scene.dashing > 0){
+            this.dashV = default_scene.dashing / 3;
             default_scene.vx = this.dashX * this.dashV * this.del;
             default_scene.vy = this.dashY * this.dashV * this.del;
-            if(10 - Math.floor(this.dashing / 3) > this.dTrail.length){
+            if(10 - Math.floor(default_scene.dashing / 3) > this.dTrail.length){
                 this.dTrail.push(new Sprite(default_scene.Player.getImage(), false, -1, default_scene.Player.x, default_scene.Player.y));
                 //new Particle(Player.x+hSize, Player.y+hSize, '#a2a1ff', 10, -.1, -vx, -vy);
             }
-            for(var i = 0; i < this.dTrail.length; i++) this.dTrail[i].alpha = (i+1)/this.dTrail.length * (this.dashing/50);
-            if((this.dashing -= this.del) <= 0){
+            for(var i = 0; i < this.dTrail.length; i++) this.dTrail[i].alpha = (i+1)/this.dTrail.length * (default_scene.dashing/50);
+            if((default_scene.dashing -= this.del) <= 0){
                 for(var d of this.dTrail) d.del();
                 this.dTrail = [];
             }
@@ -151,27 +188,30 @@ export default class default_scene extends Scene{
             if(default_scene.key[65]) default_scene.Player.flip = true;
             else if(default_scene.key[68]) default_scene.Player.flip = false;
             else default_scene.Player.frame = 0;
-            if(default_scene.parryCool <= 0 || this.grounded) default_scene.vx += this.walk, default_scene.vx *= this.del;
-            if(default_scene.parrying <= 0 && default_scene.pey[16]) default_scene.parrying = 50;
+            default_scene.vx += this.walk, default_scene.vx *= this.del;
+            if(default_scene.parrying <= 0 && default_scene.parryCool < 0 && default_scene.pey[16]) default_scene.parrying = 50;
         }
         this.wallCheck(true);
         if(!this.grounded){
-            if(this.kp && this.dashing < 0) default_scene.vy += this.del * .5, default_scene.Player.frame = default_scene.vy < 0 ? 7 : 8;
+            if(default_scene.kp && default_scene.dashing < 0) default_scene.vy += this.del * .5, default_scene.Player.frame = default_scene.vy < 0 ? 7 : 8;
             if(default_scene.vy < 0){
                 if(default_scene.Player.y + default_scene.vy - this.qSize < 0) this.dashY = default_scene.vy = 0;
-                else if(default_scene.Player.y > default_scene.mh) this.die();
+                else if(default_scene.Player.y > default_scene.mh) default_scene.die();
                 else if(default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 1 || default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 1) default_scene.vy = 0;
                 else this.wallCheck(false);
             }else{
-                if(default_scene.qid[this.wGen = Math.floor((default_scene.Player.y+this.size+default_scene.vy)/this.size)][Math.round(default_scene.Player.x/this.size)] == 1) this.grounded = true, this.dashY = default_scene.vy = 0, default_scene.Player.y = (this.wGen-1)*this.size;
+                if(default_scene.qid[this.wGen = Math.floor((default_scene.Player.y+this.size+default_scene.vy)/this.size)][Math.round(default_scene.Player.x/this.size)] > 0) this.grounded = true, default_scene.pvEnd(), this.dashY = default_scene.vy = 0, default_scene.Player.y = (this.wGen-1)*this.size;
                 this.wallCheck(false);
             }
-        }else if(this.dashing < 0 && default_scene.key[32] && default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 0 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 0) this.grounded = false, default_scene.vy = -8;
+        }else if(default_scene.dashing < 0 && default_scene.key[32] && default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] != 1 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] != 1) this.grounded = false, default_scene.vy = -8;
         else if(default_scene.qid[this.wGen = Math.round((default_scene.Player.y+this.size)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 0 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 0) this.grounded = false, default_scene.vy = 0;
 
         if(default_scene.parrying >= 0) default_scene.Player.frame = 12;
-        else if(default_scene.parryCool > 0) default_scene.Player.frame = 13, default_scene.parryCool -= this.del;
-        if(this.kp) default_scene.Player.move(default_scene.vx, default_scene.vy);
+        else if(default_scene.parryCool > 0){
+            default_scene.Player.frame = 13;
+            if((default_scene.parryCool -= this.del) < 0) default_scene.pvEnd();
+        }
+        if(default_scene.kp) default_scene.Player.move(default_scene.vx + default_scene.px, default_scene.vy + default_scene.py);
         this.mdx = default_scene.mouseX - default_scene.Player.x+default_scene.camX+this.hSize;
         this.mdy = default_scene.mouseY - default_scene.Player.y+default_scene.camY+this.hSize;
         this.mdl = Math.sqrt(this.mdx*this.mdx+this.mdy*this.mdy);
@@ -185,9 +225,9 @@ export default class default_scene extends Scene{
             if(this.doubles[i+4] == -1){
                 this.dashX = this.getDash(i, true); this.dashY = this.getDash(i, false);
                 if(default_scene.key[this.doubles[this.wGen = this.wrap(i+1, 4)]] || default_scene.key[this.doubles[this.wGen = this.wrap(i-1, 4)]]) this.dashX += this.getDash(this.wGen, true), this.dashY += this.getDash(this.wGen, false), this.dashX *= .707, this.dashY *= .707;
-                this.dashing = 30; this.dashCool = 40;
+                default_scene.dashing = 30; this.dashCool = 40;
                 if(this.dashY > 0 && this.grounded) this.dashY = 0;
-                this.doubles[i+4] = 0; break;
+                this.doubles[i+4] = 0; default_scene.pvEnd(); break;
             }
         }
 
@@ -195,17 +235,15 @@ export default class default_scene extends Scene{
             if(this.throwing == 0){
                 if(this.ammo[this.bSel] == 0) this.throwing = -this.del;
                 else this.ammo[this.bSel]--;
-                switch(this.bSel){
-                    case 0:
-                        if(this.kBall.hidden) this.kBall.setPos(default_scene.Player.x, default_scene.Player.y);
-                        (this.Ball = this.kBall).show();
-                    break; default:
-                        this.Ball = new Sprite(this.bSel == 1 ? "grenade" : "sword");
-                        this.Ball.setPos(default_scene.Player.x, default_scene.Player.y);
-                    break;
+                if(this.bSel == 0){
+                    if(this.kBall.hidden) this.kBall.setPos(default_scene.Player.x, default_scene.Player.y);
+                    //this.kBall.removeProj();
+                    (this.Ball = this.kBall).show();
+                }else{
+                    this.Ball = new Sprite(this.bSel == 1 ? "grenade" : "sword");
+                    this.Ball.setPos(default_scene.Player.x, default_scene.Player.y);
                 }
                 //Count.show();
-                this.Ball.removeProj();
                 this.Ball.moveTo(this.Tar, 25, -this.qSize, -this.qSize);
             }
             this.throwing = Math.min(25, this.throwing + this.del);
@@ -214,9 +252,10 @@ export default class default_scene extends Scene{
         }if(this.throwing > 0){
             if(this.thl > 0 && !default_scene.key[81]){ //throw!
                 this.thl *= 3;
-                new Proj(this.Ball, this.mdx * this.thl, this.mdy * this.thl, 0, 0);
                 this.Ball.moveTo(undefined);
                 this.Ball.setPos(this.Tar.x-this.qSize, this.Tar.y-this.qSize);
+                if(this.Ball.p == undefined) new Proj(this.Ball, this.mdx * this.thl, this.mdy * this.thl, 0, 0);
+                else this.Ball.p.setAll(this.Ball, this.mdx * this.thl, this.mdy * this.thl, 0, 0);
                 this.Count.hide(); default_scene.hasBall = false;
                 this.Count.sh = this.throwing = 0; 
             }//else Player.frame = thfr + thl;
@@ -232,6 +271,7 @@ export default class default_scene extends Scene{
                 if(this.kicking < 275) this.kicking = -50; //wiff for real
                 else if(default_scene.kl != undefined){
                     this.hk = true;
+                    default_scene.kl.del();
                     default_scene.kl.vx = default_scene.kl.vy = default_scene.kl.sx = default_scene.kl.sy = 0;
                     default_scene.kl.s.shake(5, 290);
                     default_scene.kl.s.moveTo(this.Tar, 290, -this.qSize, -this.qSize);
@@ -241,20 +281,24 @@ export default class default_scene extends Scene{
                 default_scene.kl.s.shake(); default_scene.kl.s.moveTo(undefined);
                 default_scene.kl.s.setPos(this.Tar.x-this.qSize, this.Tar.y-this.qSize);
                 default_scene.kl.vx = this.mdx * 20; default_scene.kl.vy = this.mdy * 20;
+                default_scene.kl.sx = default_scene.curveX; default_scene.kl.sy = default_scene.curveY;
                 default_scene.kl.c = Math.min(this.thl, 3), default_scene.kl.g = 0;
                 this.Count.hide(); this.Count.shake(undefined);
                 this.Count.frame = default_scene.vy = 0;
                 Proj.List.push(default_scene.kl);
+                for(var d of default_scene.dots) d.hidden = true;
+                //default_scene.kl = undefined;
                 //camShake(3, 10);
                 this.kicking = -30;
             }else if(default_scene.kl){
+                default_scene.ray(this.Tar.x+this.qSize, this.Tar.y+this.qSize, this.mdx, this.mdy, 500);
                 this.thl = Math.floor((290-this.kicking)/30);
                 this.Count.frame = default_scene.clamp(this.thl-1, 0, 2);
                 this.Count.shake(this.Count.frame, 290);
                 this.Count.setPos(default_scene.Player.x+this.qSize, default_scene.Player.y-this.hSize);
             }
         }else if(this.kicking < 0 && (this.kicking += this.del) > 0) this.kicking = 0; //cooldown
-        else if(default_scene.pey[230] && default_scene.parrying < 0) this.kicking = 300, this.curve = 0, this.hk = false, default_scene.kl = undefined;
+        else if(default_scene.pey[230] && default_scene.parrying < 0) this.kicking = 300, default_scene.curveX = default_scene.curveY = 0, this.hk = false, default_scene.kl = undefined;
 
         this.newCamX = default_scene.camX + (default_scene.Player.x-this.hcw - default_scene.camX)/10;
         if(this.newCamX > 0 && this.newCamX < default_scene.mw - this.cw) default_scene.camX = this.newCamX;
@@ -264,14 +308,19 @@ export default class default_scene extends Scene{
             default_scene.shCamX = default_scene.rand(default_scene.shCam);
             default_scene.shCamY = default_scene.rand(default_scene.shCam);
         }
+        //BACKGROUND LAYER:::
 
-        //default_scene.ctx.drawImage(default_scene.tiles[1], 32, 32);
-
+        //MAP LAYER:::
         this.makeMap();
+        //SPRITE LAYER:::
         Enemy.Run(this.del);
         Proj.Run(this.del);
         Sprite.Run(this.del);
         Particle.Run(this.del);
+        //UI LAYER:::
+        Sprite.UIRun(this.del);
+
+
         default_scene.pey = [];
     }
     public wallCheck(ex: boolean): void{
@@ -292,7 +341,11 @@ export default class default_scene extends Scene{
         default_scene.shct = t;
     }
     public static distance(s1: Sprite, s2: Sprite, d1 = 0, d2 = 0): number{
-        return Math.sqrt((default_scene.genX = s2.x+d1-s1.x-d2)*default_scene.genX + (default_scene.genY = s2.y+d1-s1.y-d2)*default_scene.genY);
+        //return Math.sqrt((default_scene.genX = s2.x+d1-s1.x-d2)*default_scene.genX + (default_scene.genY = s2.y+d1-s1.y-d2)*default_scene.genY);
+        return this.pDistance(s1.x-d2, s1.y-d2, s2.x+d1, s2.y+d1);
+    }
+    public static pDistance(x1: number, y1: number, x2: number, y2: number){
+        return Math.sqrt((default_scene.genX = x2-x1)*default_scene.genX + (default_scene.genY = y2-y1)*default_scene.genY);
     }
 
     private build(str: string): void{
@@ -332,13 +385,19 @@ export default class default_scene extends Scene{
         default_scene.ctx.drawImage(default_scene.tiles[default_scene.qid[y][x]], x*this.size - default_scene.camX - default_scene.shCamX, y*this.size - default_scene.camY - default_scene.shCamY);
     }
     public static damage(): void{
-        console.log("OUCH!!! --> took damage!");
+        default_scene.hp--;
+        default_scene.hearts[default_scene.hp].frame = 1;
+        console.log("OUCH!!! --> took damage! " + default_scene.hp);
+        if(default_scene.hp == 0) this.die();
     }
-    private die(): void{
+    private static pvEnd(){
+        default_scene.vx += default_scene.px, default_scene.vy += default_scene.py, default_scene.px = default_scene.py = 0;
+    }
+    private static die(): void{
         console.log("DEAD!!!");
     }
     private getKick(x: number, y: number, d: number): Proj{
-        for(var p of Proj.List) if(Math.sqrt((default_scene.genX = p.s.x-x+this.qSize)*default_scene.genX + (default_scene.genY = p.s.y-y+this.qSize)*default_scene.genY) <= d) return p;
+        for(var p of Proj.List) if(!p.h && Math.sqrt((default_scene.genX = p.s.x-x+this.qSize)*default_scene.genX + (default_scene.genY = p.s.y-y+this.qSize)*default_scene.genY) <= d) return p;
         return undefined;
     }
     public static clamp(n: number, min: number, max: number): number{
@@ -354,4 +413,37 @@ export default class default_scene extends Scene{
     private sign(x: number): number{
         return Math.floor(x/2)*2-1;
     }
+    public static rayTo(s1: Sprite, s2: Sprite){ //start Sprite, dest Sprite
+        var wGen = default_scene.distance(s1, s2);
+        default_scene.genX /= wGen; default_scene.genY /= wGen;
+        return this.ray(s1.x, s1.y, default_scene.genX, default_scene.genY, wGen, 1, false);
+    }
+    public static ray(sx: number, sy: number, dx: number, dy: number, d: number, poll = 1, draw = true){
+        var rx = sx, ry = sy, rl = d/10, rd = rl, ri = 0, rg;
+        while((d -= poll) > 0){
+            rx += dx * poll;
+            ry += dy * poll;
+            if(draw){
+                dx += this.curveX * .0031 * poll;
+                dy += this.curveY * .0031 * poll;
+                rg = Math.sqrt(dx*dx + dy*dy);
+                dx /= rg; dy /= rg;
+                default_scene.genX = rx, default_scene.genY = ry;
+                if((rd -= poll) < 0){
+                    //console.log(rx + ", " + ry);
+                    default_scene.dots[ri].setPos(rx-Sprite.qSize, ry-Sprite.qSize);
+                    default_scene.dots[ri].hidden = false;
+                    rd = rl; ri++;
+                }
+            }
+            try{
+                if(default_scene.qid[Math.round((ry-Sprite.qSize)/Sprite.size)][Math.round((rx-Sprite.qSize)/Sprite.size)] == 1) d = -2; //|| (dy > 0 && default_scene.qid[Math.round(ry/Sprite.size)][Math.round(rx/Sprite.size)] == 2)
+            }catch(e){d = -1;}
+        }
+        if(draw) for(var i = ri; i < 10; i++) default_scene.dots[i].hidden = true;
+        return d != -2;
+    }
+    //private get(y: number, x: number, b = false){
+    //    return default_scene.qid[y][x];
+    //}
 }

@@ -10,7 +10,7 @@ import Menu from "./Menu";
 
     // Set up options for our game
     let options = {
-        canvasSize: {x: screen.width, y: screen.height*.8},          // The size of the game
+        canvasSize: {x: 1180, y: screen.height*.8},          // The size of the game
         clearColor: {r: 252, g: 102, b: 3},   // The color the game clears to
     }
 
