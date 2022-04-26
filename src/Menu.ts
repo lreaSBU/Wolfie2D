@@ -13,6 +13,7 @@ export default class Menu extends Scene {
     private mainMenu: Layer;
     private about: Layer;
     private control: Layer;
+    private cheatCodes: Layer;
 
     loadScene(){}
 
@@ -32,6 +33,13 @@ export default class Menu extends Scene {
         play.borderColor = Color.WHITE;
         play.backgroundColor = Color.TRANSPARENT;
         play.onClickEventId = "play";
+
+        const cheats = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x + 300, center.y - 100), text: "CHEAT CODES"});
+        cheats.size.set(200, 50);
+        cheats.borderWidth = 2;
+        cheats.borderColor = Color.WHITE;
+        cheats.backgroundColor = Color.TRANSPARENT;
+        cheats.onClickEventId = "cheats";
 
         // Add about button
         const about = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y + 100), text: "Credits"});
@@ -70,6 +78,7 @@ export default class Menu extends Scene {
 
         // Subscribe to the button events
         this.receiver.subscribe("play");
+        this.receiver.subscribe("cheats");
         this.receiver.subscribe("about");
         this.receiver.subscribe("menu");
         this.receiver.subscribe("control");
@@ -120,6 +129,18 @@ export default class Menu extends Scene {
         controlBack.borderColor = Color.WHITE;
         controlBack.backgroundColor = Color.TRANSPARENT;
         controlBack.onClickEventId = "menu";
+
+        this.cheatCodes = this.addUILayer("cheats");
+        this.cheatCodes.setHidden(true);
+
+        const cheatLine = <Label>this.add.uiElement(UIElementType.LABEL, "cheats", {position: new Vec2(center.x, center.y - 100), text: "Press down on middle mouse button to enter god mode!!!"});
+
+        const cheatBack = this.add.uiElement(UIElementType.BUTTON, "cheats", {position: new Vec2(center.x, center.y + 250), text: "Back"});
+        cheatBack.size.set(200, 50);
+        cheatBack.borderWidth = 2;
+        cheatBack.borderColor = Color.WHITE;
+        cheatBack.backgroundColor = Color.TRANSPARENT;
+        cheatBack.onClickEventId = "menu";
         
         // HOMEWORK 4 - TODO
         /*
@@ -151,6 +172,11 @@ export default class Menu extends Scene {
                 this.sceneManager.changeToScene(default_scene, {});
             }
 
+            if(event.type === "cheats"){
+                this.mainMenu.setHidden(true);
+                this.cheatCodes.setHidden(false);
+            }
+
             if(event.type === "about"){
                 this.about.setHidden(false);
                 this.mainMenu.setHidden(true);
@@ -160,6 +186,7 @@ export default class Menu extends Scene {
                 this.mainMenu.setHidden(false);
                 this.about.setHidden(true);
                 this.control.setHidden(true);
+                this.cheatCodes.setHidden(true);
             }
             if(event.type === "control"){
                 this.mainMenu.setHidden(true);
