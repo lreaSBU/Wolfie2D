@@ -2,6 +2,7 @@ import default_scene from "../default_scene";
 import Sprite from "./Sprite";
 import Particle from "./Particle";
 import Proj from "./Proj";
+import { GameEventType } from "../Wolfie2D/Events/GameEventType";
 
 export default class Enemy{
     private static ref = ["goomba", -1];
@@ -41,6 +42,7 @@ export default class Enemy{
                             if(!default_scene.rayTo(this.s, default_scene.Player)) return;
                             var newProj = new Proj(new Sprite("spit", false, -1, this.s.x+Sprite.qSize, this.s.y+Sprite.qSize), default_scene.genX*2, default_scene.genY*2, 1);
                             newProj.h = true;
+                            default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "spit", loop: false, holdReference: false});
                         }
                     }else if((this.w += del) > 300) this.w = -30; //waiting
                     else this.s.flip = this.vx > 0, this.s.x += this.vx * del; //walking
@@ -64,6 +66,7 @@ export default class Enemy{
             Particle.Cloud(p.s.x+Sprite.qSize, p.s.y+Sprite.qSize, 10, 10, '#ff0000', 50, .4, p.vx, p.vy);
             Particle.Cloud(p.s.x+Sprite.qSize, p.s.y+Sprite.qSize, 10, 5, '#ff0000', 50, .4, -.2*p.vx, -.2*p.vy);
             default_scene.camShake(3, 10);
+            default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "splat", loop: false, holdReference: false});
         }else p.del();
         /*if(p.t == 0){ //ball bounces up
             p.vx = -.1 * Math.sign(p.vx);

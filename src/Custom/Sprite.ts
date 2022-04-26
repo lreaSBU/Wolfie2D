@@ -109,7 +109,7 @@ export default class Sprite{
             if((this.rt -= del) < 0) this.rot = undefined;
         }
         if(this.hidden) return;
-        default_scene.ctx.globalAlpha = this.alpha;
+        default_scene.ctx.globalAlpha = this == default_scene.Player ? 1 : this.alpha * default_scene.dead;
         if(this.ui) default_scene.ctx.drawImage(this.flip ? this.flips[this.frame] : this.frames[this.frame], this.x+this.sx, this.y+this.sy);
         else default_scene.ctx.drawImage(this.flip ? this.flips[this.frame] : this.frames[this.frame], this.x+this.sx-default_scene.camX-default_scene.shCamX, this.y+this.sy-default_scene.camY-default_scene.shCamY);
         //console.log(this.toString() + "::: " + default_scene.camX + ", " + default_scene.camY);

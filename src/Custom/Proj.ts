@@ -2,6 +2,7 @@ import default_scene from "../default_scene";
 import Sprite from "./Sprite";
 import Enemy from "./Enemy";
 import { TimerState } from "../Wolfie2D/Timing/Timer";
+import { GameEventType } from "../Wolfie2D/Events/GameEventType";
 
 export default class Proj{
     public static List: Proj[] = [];
@@ -51,11 +52,17 @@ export default class Proj{
             if(this.vy > 0 && this.vy < .2) this.vy = 0;
             this.vy *= -.8; this.vx *= .9;
             this.sx = this.sy = 0;
+            switch(this.t){
+                case 0: default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "bounce", loop: false, holdReference: false}); break;
+            }
             if(--this.c <= 0) this.g = -.4;
             //else if(this.f) this.del(true);
         }else if(this.s.x + this.vx < 0 || this.s.x + this.vx + Sprite.hSize > default_scene.mw || default_scene.qid[Math.round((this.s.y-Sprite.qSize)/Sprite.size)][Proj.wGen = Math.round((this.s.x + this.vx - default_scene.genX)/Sprite.size)] == 1){
             this.vx *= -.8; this.vy *= .9;
             this.sx = this.sy = 0;
+            switch(this.t){
+                case 0: default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "bounce", loop: false, holdReference: false}); break;
+            }
             if(--this.c <= 0) this.g = -.4;
             //else if(this.f) this.del(true);
         }
@@ -76,6 +83,7 @@ export default class Proj{
                 this.vx *= -.1; this.vy = -5; this.c = 0; this.g = -.4;
                 default_scene.parrying = -1, default_scene.parryCool = 40;
                 this.h = false; default_scene.camShake(2, 10);
+                default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "parry", loop: false, holdReference: false});
             }else if(default_scene.parrying < 0 && this.h && this.hitPlayer()){
                 default_scene.damage();
                 this.del(true); return;
