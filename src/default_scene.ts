@@ -104,6 +104,7 @@ export default class default_scene extends Scene{
     static dead: number = 1;
     static psx: number;
     static psy: number;
+    static deathMark: Sprite;
 
     loadScene(): void {
         //this.load.image("logo", "demo_assets/images/wolfie2d_text.png");
@@ -168,6 +169,8 @@ export default class default_scene extends Scene{
 
         Sprite.LoadStatic("spit", Sprite.hSize);
         default_scene.mark = new Sprite("mark");
+        default_scene.deathMark = new Sprite("mark");
+        default_scene.deathMark.hide();
         default_scene.mark.hidden = true;
 
         for(var i = 0; i < 10; i++){
@@ -182,7 +185,7 @@ export default class default_scene extends Scene{
 
         //this.build(this.load.getObject("level1").toString());
         this.build('                              -----                            -            0-,                               ---                             -            --,                                -                              -          0- -,                                                               -          -  -,-                                                              -        0-   -,-                                                              -        -    -,-                                                              -       -     -,-_-                                                            -      -      -,                                                               -     -       -,                ___                                            -    -        -,                                                               -   -         -,                                                               -  -          -,                                                               - -           -,                             ___-                              -             -,                                -                              --            -,                                -                              - -           -,                                -    0   -                     -  -          -,                                -_________                     -   -         -,                                -                              -    -        -,                                -                    - -0- -         -        ,                                ---                  -------          -       ,     s                          -  --                  ---             -      ,            -                   -    _-                ---              -     ,-          --            0      -0     --              ---                   -,------------------------------------------------------------------------------');
-        default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "bgm", loop: true, holdReference: false});
+        default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "bgm", loop: true, holdReference: true});
     }
 
     updateScene(delta: number): void {
@@ -222,13 +225,13 @@ export default class default_scene extends Scene{
         this.wallCheck(true);
         if(!this.grounded){
             if(default_scene.kp && default_scene.dashing < 0 && default_scene.dead == 1) default_scene.vy += this.del * .5, default_scene.Player.frame = default_scene.vy < 0 ? 7 : 8;
-            if(default_scene.vy < 0){
-                if(default_scene.Player.y + default_scene.vy - this.qSize < 0) this.dashY = default_scene.vy = 0;
+            if(default_scene.vy < 0 || default_scene.py < 0){
+                if(default_scene.Player.y + default_scene.vy + default_scene.py - this.qSize < 0) this.dashY = default_scene.vy = default_scene.py = 0, default_scene.Player.y = .01;
                 else if(default_scene.Player.y > default_scene.mh) default_scene.die();
                 else if(default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 1 || default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 1) default_scene.vy = 0;
                 else this.wallCheck(false);
             }else{
-                if(default_scene.qid[this.wGen = Math.floor((default_scene.Player.y+this.size+default_scene.vy)/this.size)][Math.round(default_scene.Player.x/this.size)] > 0) this.grounded = true, default_scene.pvEnd(), this.dashY = default_scene.vy = 0, default_scene.Player.y = (this.wGen-1)*this.size;
+                if(default_scene.qid[this.wGen = Math.floor((default_scene.Player.y+this.size+default_scene.vy+default_scene.py)/this.size)][Math.round(default_scene.Player.x/this.size)] > 0) this.grounded = true, default_scene.pvEnd(), this.dashY = default_scene.vy = 0, default_scene.Player.y = (this.wGen-1)*this.size;
                 this.wallCheck(false);
             }
         }else if(default_scene.dashing < 0 && default_scene.key[32] && default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] != 1 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] != 1){
@@ -354,9 +357,10 @@ export default class default_scene extends Scene{
                 default_scene.dead = 1;
                 default_scene.Player.moveTo(undefined);
                 default_scene.hp = default_scene.maxHP;
+                for(var h of default_scene.hearts) h.frame = 0;
                 default_scene.PlayerStart();
                 default_scene.emitter.fireEvent(GameEventType.STOP_SOUND, {key: "gameOver"});
-                default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "bgm", loop: true, holdReference: false});
+                default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "bgm", loop: true, holdReference: true});
             }
         }
         //MAP LAYER:::
@@ -377,11 +381,11 @@ export default class default_scene extends Scene{
     public wallCheck(ex: boolean): void{
         if(default_scene.vx == 0) return;
         if(default_scene.vx < 0){
-            if(ex && default_scene.Player.x + default_scene.vx < -this.qSize) default_scene.Player.x = -this.qSize, default_scene.vx= 0;
+            if(ex && default_scene.Player.x + default_scene.vx + default_scene.px < -this.qSize) default_scene.Player.x = -this.qSize, default_scene.vx= 0;
             else if(default_scene.qid[ex ? Math.round(default_scene.Player.y/this.size) : Math.ceil(default_scene.Player.y/this.size)][this.wGen = Math.floor((default_scene.Player.x+this.qSize+default_scene.vx)/this.size)] == 1) default_scene.Player.x = (this.wGen+1)*this.size - this.qSize, default_scene.vx = 0;
         }else{
-            if(ex && default_scene.Player.x + default_scene.vx > default_scene.mw - this.hSize - this.qSize) default_scene.Player.x = default_scene.mw - this.hSize - this.qSize, default_scene.vx = 0;
-            else if(default_scene.qid[ex ? Math.round(default_scene.Player.y/this.size) : Math.ceil(default_scene.Player.y/this.size)][this.wGen = Math.floor((default_scene.Player.x+this.hSize+this.qSize+default_scene.vx)/this.size)] == 1) default_scene.Player.x = (this.wGen-1)*this.size + this.qSize, default_scene.vx = 0;
+            if(ex && default_scene.Player.x + default_scene.vx + default_scene.px > default_scene.mw - this.hSize - this.qSize) default_scene.Player.x = default_scene.mw - this.hSize - this.qSize, default_scene.vx = 0;
+            else if(default_scene.qid[ex ? Math.round(default_scene.Player.y/this.size) : Math.ceil(default_scene.Player.y/this.size)][this.wGen = Math.floor((default_scene.Player.x+this.hSize+this.qSize+default_scene.vx+default_scene.px)/this.size)] == 1) default_scene.Player.x = (this.wGen-1)*this.size + this.qSize, default_scene.vx = 0;
         }
     }
     public static rand(x: number): number{
@@ -466,10 +470,10 @@ export default class default_scene extends Scene{
         console.log("DEAD!!!");
         default_scene.dead -= .0001;
         default_scene.emitter.fireEvent(GameEventType.STOP_SOUND, {key: "bgm"});
-        default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "gameOver", loop: true, holdReference: false});
-        this.mark.setPos(this.camX+this.hcw-Sprite.qSize, this.camY+this.hch+Sprite.size);
+        default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "gameOver", loop: true, holdReference: true});
+        this.deathMark.setPos(this.camX+this.hcw-Sprite.qSize, this.camY+this.hch+Sprite.size*2);
         this.mark.hidden = true;
-        this.Player.moveTo(this.mark, 5000);
+        this.Player.moveTo(this.deathMark, 5000);
     }
     private getKick(x: number, y: number, d: number): Proj{
         for(var p of Proj.List) if(!p.h && Math.sqrt((default_scene.genX = p.s.x-x+this.qSize)*default_scene.genX + (default_scene.genY = p.s.y-y+this.qSize)*default_scene.genY) <= d) return p;
