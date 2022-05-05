@@ -13,13 +13,17 @@ export default class Enemy{
     public vx: number;
     public vy: number;
     public w: number = 0;
+    public wl: number;
     public s: Sprite;
+    private hp: number;
     public grounded: boolean;
     constructor(x: number, y: number, t = 0){
         this.t = t;
         this.vx = this.vy = 0;
+        this.w = Enemy.randFloat(0, 5);
+        this.wl = Enemy.randFloat(290, 350);
         switch(t){
-            case 0: this.vx = 1; this.grounded = true; break;
+            case 0: this.vx = 1; this.grounded = true; this.hp = 3; break;
             case 1: break;
             case 2: break;
         }
@@ -44,34 +48,55 @@ export default class Enemy{
                             newProj.h = true;
                             default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "spit", loop: false, holdReference: false});
                         }
-                    }else if((this.w += del) > 300) this.w = -30; //waiting
+                    }else if((this.w += del) > this.wl) this.w = Enemy.randFloat(-30, -25); //waiting
                     else this.s.flip = this.vx > 0, this.s.x += this.vx * del; //walking
                 }else this.vy += .4 * del, this.s.y += this.vy;
             break; case 1: //bat AI
 
-            break; case 2: //something else AI
+            break; case 2: //monkey? AI
 
             break;
         }
     }
     check(p: Proj){
         if(!this.s.check(p.s)) return false;
-        //console.log(p.s.x + ", " + p.s.y + " + " + this.s.x + ", " + this.s.y);
-        switch(this.t){
-            case 0: break;
-            case 1: break;
-            case 2: break;
-        }
         if(p.t != 1){ //blood splat if not grenade
             Particle.Cloud(p.s.x+Sprite.qSize, p.s.y+Sprite.qSize, 10, 10, '#ff0000', 50, .4, p.vx, p.vy);
             Particle.Cloud(p.s.x+Sprite.qSize, p.s.y+Sprite.qSize, 10, 5, '#ff0000', 50, .4, -.2*p.vx, -.2*p.vy);
             default_scene.camShake(3, 10);
             default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "splat", loop: false, holdReference: false});
         }else p.del();
-        /*if(p.t == 0){ //ball bounces up
-            p.vx = -.1 * Math.sign(p.vx);
-            p.vy = -9; p.c = 0;
-        }*/
+        //if(p.t == 1) p.del();
+        this.hurt((p.t <= 0 ? 1 : 3)*Math.max(p.c, 1), p.vx, p.vy);
         return true;
+    }
+    die(x: number, y: number){
+        switch(this.t){
+            case 0: break;
+            case 1: break;
+            case 2: break;
+        }
+        var np = new Proj(this.s, x, y - 10, 0);
+        np.f = true;
+        np.bounce = .5;
+        np.en = true;
+        this.del(true);
+        default_scene.addScore(this.t == 2 ? 100 : 50);
+    }
+    hurt(d: number, vx = 0, vy = 0){
+        if((this.hp -= d) <= 0){
+            var gen = Math.sqrt(vx*vx+vy*vy);
+            this.die(vx / gen, vy / gen);
+            return;
+        }
+        //this.s.frame = 2; //hurt frame (whatever that is)
+        default_scene.addScore(10);
+    }
+    del(b = false){
+        if(!b) this.s.del();
+        Enemy.List.splice(Enemy.List.indexOf(this), 1);
+    }
+    public static randFloat(l: number, u: number){
+        return l + Math.random()*(u-l);
     }
 }

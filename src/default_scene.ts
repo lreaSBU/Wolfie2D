@@ -10,6 +10,7 @@ import PlayerController from "./demos/PlatformerPlayerController";
 import Spritesheet from "./Wolfie2D/DataTypes/Spritesheet";
 import { GameEventType } from "./Wolfie2D/Events/GameEventType";
 import { TimerState } from "./Wolfie2D/Timing/Timer";
+import { TiledTilemapData } from "./Wolfie2D/DataTypes/Tilesets/TiledData";
 
 export default class default_scene extends Scene{
     public size: number = 32;
@@ -21,6 +22,7 @@ export default class default_scene extends Scene{
     public static shCamX: number = 0;
     public static shCamY: number = 0;
     public static maxHP: number = 3;
+    public static maxTimer: number = 500;
     public static hp: number = default_scene.maxHP;
 
     public static key: boolean[] = [];
@@ -29,7 +31,7 @@ export default class default_scene extends Scene{
     public static ctx: CanvasRenderingContext2D;
     public static mr: DOMRect;
 
-    private static mapRef: string[] = [' ', '-', '_', ']', '[', 's', 'f'];
+    private static mapRef: string[] = [' ', '-', '_', 'g', 's', '.', 'f'];
     private static tiles: HTMLImageElement[] = [];
     private static grid: string[][];
 
@@ -94,7 +96,7 @@ export default class default_scene extends Scene{
     public static hearts: Sprite[] = [];
     public static weapons: Sprite[] = [];
 
-    public static hasBall: boolean = true;
+    public static hasBall: number = -1;
     public static isCurving: number = 0;
     public grounded: boolean = true;
     public hk: boolean = false;
@@ -106,6 +108,31 @@ export default class default_scene extends Scene{
     static psy: number;
     static deathMark: Sprite;
 
+
+    public static score: number = 0; //actual score value
+    private static displayScore: number = 0; //what the text displays
+    private static multiplier: number = 0;
+    private static multTimer: number = 0;
+    private static colRef: string[] = [
+        '#0004ff',
+        '#00a806',
+        '#ffff00',
+        '#ff6600',
+        '#ff0000'
+    ];
+    public static titles: string[][] = [
+        ("You Can Suck My").split(' '),
+        ("There Once Was A").split(' '),
+        ("The First Rule Of").split(' '),
+        ("Hon, Bring Me The").split(' '),
+        ("So Many Ways To").split(' '),
+        ("Tell Your Friends About").split(' ')
+    ];
+    private static tPick: number = default_scene.randRange(0, default_scene.titles.length-1);
+    static titleHelper: any;
+    static streak: number;
+    static selArrow: Sprite;
+
     loadScene(): void {
         //this.load.image("logo", "demo_assets/images/wolfie2d_text.png");
         //this.load.object("level1", "levels/level1.txt");
@@ -116,8 +143,18 @@ export default class default_scene extends Scene{
         this.load.audio("splat", "sounds/blood splatter.aac");
         this.load.audio("jump", "sounds/jump.aac");
         this.load.audio("gameOver", "sounds/game over.mp3");
-        //this.load.audio("mainMenu", "sounds/main menu.mp3");
         this.load.audio("bgm", "sounds/level.mp3");
+        this.load.audio("note1", "sounds/note1.mp3");
+        this.load.audio("note2", "sounds/note1.mp3");
+        this.load.audio("note3", "sounds/note1.mp3");
+        this.load.audio("note4", "sounds/note1.mp3");
+        this.load.audio("note5", "sounds/note1.mp3");
+
+        var myFont = new FontFace('myFont', 'url(fonts/PressStart2P-Regular.ttf)');
+        myFont.load().then(function(font){
+            document.fonts.add(font);
+            console.log('Font loaded');
+        });
     }
 
     startScene(): void {
@@ -159,33 +196,36 @@ export default class default_scene extends Scene{
             default_scene.hearts.push(new Sprite("heart", false, 2, Sprite.hSize*1.1*i));
             default_scene.hearts[i].setUI();
         }
-        /*
-        default_scene.weapons.push(new Sprite("grenade", false, 2));
-        default_scene.weapons.push(new Sprite("sword", false, 2));
-        for(var i = 0; i < default_scene.weapons.length; i++){
-            
-        }
-        */
+        var icon = new Sprite("ballIcon", false, -1, Sprite.hSize, default_scene.ch-Sprite.size*2);
+        icon.setUI();
+        icon = new Sprite("grenadeIcon", false, -1, Sprite.hSize + Sprite.size, default_scene.ch-Sprite.size*2);
+        icon.setUI();
+        icon = new Sprite("swordIcon", false, -1, Sprite.hSize + Sprite.size*2, default_scene.ch-Sprite.size*2);
+        icon.setUI();
 
         Sprite.LoadStatic("spit", Sprite.hSize);
         default_scene.mark = new Sprite("mark");
         default_scene.deathMark = new Sprite("mark");
         default_scene.deathMark.hide();
-        default_scene.mark.hidden = true;
+        default_scene.mark.hide();
+
+        default_scene.titleHelper = new Sprite("mark");
+        default_scene.titleHelper.setPos(0, default_scene.hch-Sprite.size);
+        default_scene.titleHelper.setUI();
+        default_scene.titleHelper.hide();
+
+        default_scene.selArrow = new Sprite("selArrow");
+        default_scene.selArrow.setPos(Sprite.hSize, default_scene.ch-Sprite.size*3-Sprite.hSize);
+        default_scene.selArrow.setUI();
 
         for(var i = 0; i < 10; i++){
             default_scene.dots.push(new Sprite("aim"));
             default_scene.dots[i].hidden = true;
         }
 
-        //default_scene.ctx.rect(0, 0, 500, 500);
-        //default_scene.ctx.fill();
-
-        //var test = new Enemy(300, 100, 0);
-
         //this.build(this.load.getObject("level1").toString());
-        this.build('                              -----                            -            0-,                               ---                             -            --,                                -                              -          0- -,                                                               -          -  -,-                                                              -        0-   -,-                                                              -        -    -,-                                                              -       -     -,-_-                                                            -      -      -,                                                               -     -       -,                ___                                            -    -        -,                                                               -   -         -,                                                               -  -          -,                                                               - -           -,                             ___-                              -             -,                                -                              --            -,                                -                              - -           -,                                -    0   -                     -  -          -,                                -_________                     -   -         -,                                -                              -    -        -,                                -                    - -0- -         -        ,                                ---                  -------          -       ,     s                          -  --                  ---             -      ,            -                   -    _-                ---              -     ,-          --            0      -0     --              ---                   -,------------------------------------------------------------------------------');
-        default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "bgm", loop: true, holdReference: true});
+        this.build('                              -----                            -            0-,                               ---                             -            --,                                -                              -          0- -,                                                               -          -  -,-                                                              -        0-   -,-                                                              -        -    -,-                                                              -       -     -,-_-                                                            -      -      -,                                                               -     -       -,                ___                                            -    -        -,                                                               -   -         -,                                                               -  -          -,                                                               - -           -,                             ___-                              -             -,                                -                              --            -,                                -                              - -           -,                                -    0   -                     -  -          -,                                -_________                     -   -         -,                                -                              -    -        -,                                -                    - -0- -         -        ,                                ---                  -------          -       ,     .                          -  --                  ---             -      ,            -                   -    _-                ---              -    f,-          --    s   g   0      -0     --              ---                   -,-------------------------------------------------------------------------------');
+        //default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "bgm", loop: true, holdReference: true});
     }
 
     updateScene(delta: number): void {
@@ -195,8 +235,10 @@ export default class default_scene extends Scene{
             console.log("GOD MODE ACTIVATED --> NO DAMAGE");
         }
         this.del = delta*50;
-        //if(this.del > .9) return; //throw away long frames???
+        if(default_scene.hasBall > 0) default_scene.hasBall -= this.del;
         default_scene.ctx.clearRect(0, 0, default_scene.cw, default_scene.ch);
+        default_scene.ctx.fillStyle = '#333';
+        default_scene.ctx.fillRect(0, 0, default_scene.cw, default_scene.ch);
         default_scene.kp = this.kicking <= 0 || this.kicking > 290 || !this.hk;
         if(default_scene.kp) if(default_scene.dashing > 0){
             this.dashV = default_scene.dashing / 3;
@@ -212,6 +254,12 @@ export default class default_scene extends Scene{
                 this.dTrail = [];
             }
         }else{
+            for(var i = 49; i < 52; i++) if(default_scene.pey[i]){
+                this.bSel = i-49;
+                default_scene.selArrow.x = Sprite.hSize + Sprite.size*(i-49);
+                //animation for switching
+            }
+
             this.walk = (+default_scene.key[68] - +default_scene.key[65]);
             if((this.kicking > 0 || (default_scene.parrying -= this.del) >= 0) && this.grounded) this.walk = 0;
             if(this.walk != 0 && (this.walking -= this.del) < 0) this.walking = 5, this.wf += this.wDir, this.wDir *= +(this.wf == 2)*2-1;
@@ -222,29 +270,46 @@ export default class default_scene extends Scene{
             default_scene.vx += this.walk, default_scene.vx *= this.del;
             if(default_scene.parrying <= 0 && default_scene.parryCool < 0 && default_scene.pey[16]) default_scene.parrying = 50;
         }
-        this.wallCheck(true);
-        if(!this.grounded){
-            if(default_scene.kp && default_scene.dashing < 0 && default_scene.dead == 1) default_scene.vy += this.del * .5, default_scene.Player.frame = default_scene.vy < 0 ? 7 : 8;
-            if(default_scene.vy < 0 || default_scene.py < 0){
-                if(default_scene.Player.y + default_scene.vy + default_scene.py - this.qSize < 0) this.dashY = default_scene.vy = default_scene.py = 0, default_scene.Player.y = .01;
-                else if(default_scene.Player.y > default_scene.mh) default_scene.die();
-                else if(default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 1 || default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 1) default_scene.vy = 0;
-                else this.wallCheck(false);
-            }else{
-                if(default_scene.qid[this.wGen = Math.floor((default_scene.Player.y+this.size+default_scene.vy+default_scene.py)/this.size)][Math.round(default_scene.Player.x/this.size)] > 0) this.grounded = true, default_scene.pvEnd(), this.dashY = default_scene.vy = 0, default_scene.Player.y = (this.wGen-1)*this.size;
-                this.wallCheck(false);
+        if(default_scene.dead == 1){
+            if((default_scene.multTimer -= this.del) < 0){
+                default_scene.multiplier = 0;
+                default_scene.streak = 0;
+                default_scene.tPick = default_scene.randRange(0, default_scene.titles.length-1);
             }
-        }else if(default_scene.dashing < 0 && default_scene.key[32] && default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] != 1 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] != 1){
-            default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "jump", loop: false, holdReference: false});
-            this.grounded = false; default_scene.vy = -8;
-        }else if(default_scene.qid[this.wGen = Math.round((default_scene.Player.y+this.size)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 0 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 0) this.grounded = false, default_scene.vy = 0;
+            this.wGen = default_scene.qid[Math.round(default_scene.Player.y/this.size)][Math.round(default_scene.Player.x/this.size)];
+            if(this.wGen > 2){
+                if(this.wGen < 5){
+                    this.ammo[this.wGen-2] += (this.wGen-2)*5;
+                    default_scene.qid[Math.round(default_scene.Player.y/this.size)][Math.round(default_scene.Player.x/this.size)] = 0;
+                }else if(default_scene.pey[87]){
+                    console.log('BUILD NEW LEVEL!!!');
+                }
+            }
+            this.wallCheck(true);
+            if(!this.grounded){
+                if(default_scene.kp && default_scene.dashing < 0 && default_scene.dead == 1) default_scene.vy += this.del * .5, default_scene.Player.frame = default_scene.vy < 0 ? 7 : 8;
+                if(default_scene.vy < 0 || default_scene.py < 0){
+                    if(default_scene.Player.y + default_scene.vy + default_scene.py - this.qSize < 0) this.dashY = default_scene.vy = default_scene.py = 0, default_scene.Player.y = .01;
+                    else if(default_scene.Player.y > default_scene.mh) default_scene.die();
+                    else if(default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 1 || default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 1) default_scene.vy = 0;
+                    else this.wallCheck(false);
+                }else{
+                    var curCheck;
+                    if((curCheck = default_scene.qid[this.wGen = Math.floor((default_scene.Player.y+this.size+default_scene.vy+default_scene.py)/this.size)][Math.round(default_scene.Player.x/this.size)]) == 1 || curCheck == 2) this.grounded = true, default_scene.px = default_scene.py = 0, default_scene.pvEnd(), this.dashY = default_scene.vy = 0, default_scene.Player.y = (this.wGen-1)*this.size;
+                    this.wallCheck(false);
+                }
+            }else if(default_scene.dashing < 0 && default_scene.key[32] && default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] != 1 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] != 1){
+                default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "jump", loop: false, holdReference: false});
+                this.grounded = false; default_scene.vy = -8;
+            }else if(default_scene.qid[this.wGen = Math.round((default_scene.Player.y+this.size)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 0 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 0) this.grounded = false, default_scene.vy = 0;
 
-        if(default_scene.parrying >= 0) default_scene.Player.frame = 12;
-        else if(default_scene.parryCool > 0){
-            default_scene.Player.frame = 13;
-            if((default_scene.parryCool -= this.del) < 0) default_scene.pvEnd();
+            if(default_scene.parrying >= 0) default_scene.Player.frame = 12;
+            else if(default_scene.parryCool > 0){
+                default_scene.Player.frame = 13;
+                if((default_scene.parryCool -= this.del) < 0) default_scene.pvEnd();
+            }
+            if(default_scene.kp) default_scene.Player.move(default_scene.vx + default_scene.px, default_scene.vy + default_scene.py);
         }
-        if(default_scene.kp) default_scene.Player.move(default_scene.vx + default_scene.px, default_scene.vy + default_scene.py);
         this.mdx = default_scene.mouseX - default_scene.Player.x+default_scene.camX+this.hSize;
         this.mdy = default_scene.mouseY - default_scene.Player.y+default_scene.camY+this.hSize;
         this.mdl = Math.sqrt(this.mdx*this.mdx+this.mdy*this.mdy);
@@ -264,7 +329,7 @@ export default class default_scene extends Scene{
             }
         }
 
-        if((default_scene.key[81] && this.kicking == 0 && default_scene.parrying < 0 && (default_scene.hasBall || this.bSel > 0)) || this.throwing > 0){
+        if((default_scene.key[81] && this.kicking == 0 && default_scene.parrying < 0 && default_scene.hasBall < 0) || this.throwing > 0){
             if(this.throwing == 0){
                 if(this.ammo[this.bSel] == 0) this.throwing = -this.del;
                 else this.ammo[this.bSel]--;
@@ -272,7 +337,7 @@ export default class default_scene extends Scene{
                     if(this.kBall.hidden) this.kBall.setPos(default_scene.Player.x, default_scene.Player.y);
                     (this.Ball = this.kBall).show();
                 }else{
-                    this.Ball = new Sprite(this.bSel == 1 ? "grenade" : "sword");
+                    this.Ball = new Sprite(this.bSel == 1 ? "grenade" : "sword", false, this.bSel == 0 ? -1 : (this.bSel == 1 ? 2 : 4));
                     this.Ball.setPos(default_scene.Player.x, default_scene.Player.y);
                 }
                 //Count.show();
@@ -280,15 +345,16 @@ export default class default_scene extends Scene{
             }
             this.throwing = Math.min(25, this.throwing + this.del);
             this.thl = Math.floor(this.throwing / 8);
+            default_scene.Player.frame = Math.min(6, this.thl + 4);
             if(default_scene.key[81]) default_scene.key[81] = this.throwing < 25; //limit hit
         }if(this.throwing > 0){
             if(this.thl > 0 && !default_scene.key[81]){ //throw!
                 this.thl *= 3;
                 this.Ball.moveTo(undefined);
                 this.Ball.setPos(this.Tar.x-this.qSize, this.Tar.y-this.qSize);
-                if(this.Ball.p == undefined) new Proj(this.Ball, this.mdx * this.thl, this.mdy * this.thl, 0, 0);
-                else this.Ball.p.setAll(this.Ball, this.mdx * this.thl, this.mdy * this.thl, 0, 0);
-                this.Count.hide(); default_scene.hasBall = false;
+                if(this.Ball.p == undefined) new Proj(this.Ball, this.mdx * this.thl, this.mdy * this.thl, 0, this.bSel);
+                else this.Ball.p.setAll(this.Ball, this.mdx * this.thl, this.mdy * this.thl, 0, this.bSel);
+                this.Count.hide(); default_scene.hasBall = 50;
                 this.Count.sh = this.throwing = 0; 
             }//else Player.frame = thfr + thl;
             default_scene.Player.flip = this.mdx < 0;
@@ -314,10 +380,11 @@ export default class default_scene extends Scene{
                 default_scene.kl.s.setPos(this.Tar.x-this.qSize, this.Tar.y-this.qSize);
                 default_scene.kl.vx = this.mdx * 20; default_scene.kl.vy = this.mdy * 20;
                 default_scene.kl.sx = default_scene.curveX; default_scene.kl.sy = default_scene.curveY;
-                default_scene.kl.c = Math.min(this.thl, 3), default_scene.kl.g = 0;
+                default_scene.kl.c = default_scene.kl.en ? 0 : Math.min(this.thl, 3), default_scene.kl.g = 0;
                 this.Count.hide(); this.Count.shake(undefined);
                 this.Count.frame = default_scene.vy = 0;
                 Proj.List.push(default_scene.kl);
+                default_scene.kl.safe = 5;
                 for(var d of default_scene.dots) d.hidden = true;
                 default_scene.mark.hidden = true;
                 //default_scene.kl = undefined;
@@ -374,22 +441,54 @@ export default class default_scene extends Scene{
         Particle.Run(this.del);
         //UI LAYER:::
         Sprite.UIRun(this.del);
+        if(default_scene.multiplier > 0){
+            default_scene.ctx.fillStyle = default_scene.colRef[default_scene.multiplier-1];
+            default_scene.ctx.fillRect(0, default_scene.hch, (Sprite.size*5) * (default_scene.multTimer/default_scene.maxTimer), Sprite.qSize/2);
+            default_scene.ctx.font = "10px myFont";
+            default_scene.ctx.fillText('x'+default_scene.multiplier, Sprite.size*5.5, default_scene.hch+Sprite.qSize);
+            default_scene.ctx.font = "30px myFont";
+            default_scene.ctx.fillText(default_scene.multiplier == 5 ? "KILLBALL" : default_scene.titles[default_scene.tPick][default_scene.multiplier-1], default_scene.titleHelper.x+default_scene.titleHelper.sx, default_scene.titleHelper.y+default_scene.titleHelper.sy);
+        }
+        default_scene.displayScore += (default_scene.score-default_scene.displayScore)/2;
+        default_scene.ctx.fillStyle = '#fff';
+        default_scene.ctx.font = "20px myFont";
+        default_scene.ctx.fillText(Math.round(default_scene.displayScore).toString(), Sprite.qSize, default_scene.hch+Sprite.hSize);
 
+        default_scene.ctx.font = "10px myFont";
+        for(var i = 1; i < 3; i++){
+            default_scene.ctx.fillText(this.ammo[i].toString(), Sprite.hSize + Sprite.size*i, default_scene.ch-Sprite.size*2);
+        }
 
         default_scene.pey = [];
+    }
+    public static addScore(s: number){
+        this.streak += s;
+        this.score += s * Math.max(this.multiplier, 1);
+        this.multTimer = this.maxTimer;
+        if(this.streak >= this.multiplier*100){ //multiplier up
+            this.multiplier++; 
+            this.titleHelper.x = -this.hcw; //might be tooo far left
+            this.titleHelper.moveTo(this.hearts[0], 20, 0, this.hch-Sprite.size);
+            this.titleHelper.shake(this.multiplier, this.maxTimer*2);
+            default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "note"+this.multiplier, loop: false, holdReference: false});
+        }
+        
     }
     public wallCheck(ex: boolean): void{
         if(default_scene.vx == 0) return;
         if(default_scene.vx < 0){
-            if(ex && default_scene.Player.x + default_scene.vx + default_scene.px < -this.qSize) default_scene.Player.x = -this.qSize, default_scene.vx= 0;
-            else if(default_scene.qid[ex ? Math.round(default_scene.Player.y/this.size) : Math.ceil(default_scene.Player.y/this.size)][this.wGen = Math.floor((default_scene.Player.x+this.qSize+default_scene.vx)/this.size)] == 1) default_scene.Player.x = (this.wGen+1)*this.size - this.qSize, default_scene.vx = 0;
+            if(ex && default_scene.Player.x + default_scene.vx + default_scene.px < -this.qSize) default_scene.Player.x = -this.qSize, default_scene.vx = default_scene.px = 0;
+            else if(default_scene.qid[ex ? Math.round(default_scene.Player.y/this.size) : Math.ceil(default_scene.Player.y/this.size)][this.wGen = Math.floor((default_scene.Player.x+this.qSize+default_scene.vx+default_scene.px)/this.size)] == 1) default_scene.Player.x = (this.wGen+1)*this.size - this.qSize, default_scene.vx = default_scene.px = 0
         }else{
-            if(ex && default_scene.Player.x + default_scene.vx + default_scene.px > default_scene.mw - this.hSize - this.qSize) default_scene.Player.x = default_scene.mw - this.hSize - this.qSize, default_scene.vx = 0;
-            else if(default_scene.qid[ex ? Math.round(default_scene.Player.y/this.size) : Math.ceil(default_scene.Player.y/this.size)][this.wGen = Math.floor((default_scene.Player.x+this.hSize+this.qSize+default_scene.vx+default_scene.px)/this.size)] == 1) default_scene.Player.x = (this.wGen-1)*this.size + this.qSize, default_scene.vx = 0;
+            if(ex && default_scene.Player.x + default_scene.vx + default_scene.px > default_scene.mw - this.hSize - this.qSize) default_scene.Player.x = default_scene.mw - this.hSize - this.qSize, default_scene.vx = default_scene.px = 0;
+            else if(default_scene.qid[ex ? Math.round(default_scene.Player.y/this.size) : Math.ceil(default_scene.Player.y/this.size)][this.wGen = Math.floor((default_scene.Player.x+this.hSize+this.qSize+default_scene.vx+default_scene.px)/this.size)] == 1) default_scene.Player.x = (this.wGen-1)*this.size + this.qSize, default_scene.vx = default_scene.px = 0;
         }
     }
     public static rand(x: number): number{
         return (Math.random()*2-1)*x;
+    }
+    public static randRange(l: number, u: number){
+        return l + Math.round(Math.random()*(u-l));
     }
     public static camShake(i: number, t: number): void{
         default_scene.shCam = i;
@@ -411,7 +510,7 @@ export default class default_scene extends Scene{
             default_scene.qid.push([]);
             for(var n = 0; n < default_scene.grid[i].length; n++){
                 if((mGen = default_scene.mapRef.indexOf(default_scene.grid[i][n])) > 4 || mGen == -1) switch(default_scene.grid[i][n]){
-                    case 's': default_scene.PlayerStart(n*this.size, i*this.size); break;
+                    case '.': default_scene.PlayerStart(n*this.size, i*this.size); break;
                     case 'f': break;
                     default: new Enemy(n*this.size, i*this.size, parseInt(default_scene.grid[i][n])); mGen = 0; break; //Enemy placement
                 }
@@ -463,12 +562,13 @@ export default class default_scene extends Scene{
         //default_scene.camX = default_scene.clamp(default_scene.Player.x - default_scene.hcw, 0, default_scene.mw-default_scene.cw);
         //default_scene.camY = default_scene.clamp(default_scene.Player.y + default_scene.hch, default_scene.ch, default_scene.mh);
     }
-    private static pvEnd(){
+    public static pvEnd(){
         default_scene.vx += default_scene.px, default_scene.vy += default_scene.py, default_scene.px = default_scene.py = 0;
     }
     private static die(): void{
         console.log("DEAD!!!");
         default_scene.dead -= .0001;
+        for(var i = 0; i < default_scene.key.length; i++) default_scene.key[i] = false; //clear key inputs
         default_scene.emitter.fireEvent(GameEventType.STOP_SOUND, {key: "bgm"});
         default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "gameOver", loop: true, holdReference: true});
         this.deathMark.setPos(this.camX+this.hcw-Sprite.qSize, this.camY+this.hch+Sprite.size*2);
@@ -516,10 +616,11 @@ export default class default_scene extends Scene{
                 }
             }
             try{
-                if(default_scene.qid[Math.round((ry-Sprite.qSize)/Sprite.size)][Math.round((rx-Sprite.qSize)/Sprite.size)] == 1) d = -2; //|| (dy > 0 && default_scene.qid[Math.round(ry/Sprite.size)][Math.round(rx/Sprite.size)] == 2)
-            }catch(e){d = -1;}
+                if(default_scene.qid[Math.round((ry-Sprite.qSize)/Sprite.size)][Math.round((rx-Sprite.qSize)/Sprite.size)] == 1){d = -2; break;}
+            }catch(e){d = -1; break;}
         }
         if(draw) for(var i = ri; i < 10; i++) default_scene.dots[i].hidden = true;
+        //  console.log("ray ret: " + d);
         return d != -2;
     }
     //private get(y: number, x: number, b = false){

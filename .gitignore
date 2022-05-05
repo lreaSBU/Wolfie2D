@@ -15,4 +15,5 @@ dist/*
 !dist/images
 !dist/sounds
 !dist/levels
+!dist/fonts
 
