@@ -1,4 +1,5 @@
 import default_scene from "../default_scene";
+import Proj from "./Proj";
 
 export default class Particle{
     public static List: Particle[] = [];
@@ -27,6 +28,9 @@ export default class Particle{
     }
     static Cloud(x: number, y: number, r: number, n: number, c: string, l: number, g: number, vx: number, vy: number){
         for(var i = 0; i < n; i++) new Particle(x+default_scene.rand(r), y+default_scene.rand(r), c, l, g, vx+default_scene.rand(r), vy+default_scene.rand(r));
+    }
+    static Clear(){
+        Particle.List = [];
     }
     run(del: number){
         this.x += this.vx * del;

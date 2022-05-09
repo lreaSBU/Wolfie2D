@@ -47,18 +47,18 @@ export default class Proj{
     static Run(del: number){
         for(var p of Proj.List) p.run(del);
     }
-    del(b = false){
+    del(b = false, es = false){
+        if(!es && this.t == 1) Proj.explo(this.s);
         if(b || this.h) this.s.del();
-        if(this.t == 1){ // explode effect
-            Proj.explo(this.s);
-        }
         Proj.List.splice(Proj.List.indexOf(this), 1);
     }
     run(del: number){
         if(this.safe > 0) this.safe -= del;
+        if(isNaN(this.vy)) this.vy = 0;
+        if(isNaN(this.vx)) this.vx = 0;
         default_scene.genX = this.vx < 0 ? Sprite.hSize : 0;
         default_scene.genY = this.vy < 0 ? Sprite.hSize : 0;
-        //console.log("X:: " + Math.round((this.s.y + this.vy - default_scene.genY)/Sprite.size));
+        //console.log("X:: " + Math.round((this.s.y + this.vy - default_scene.genY)/Sprite.size) + ", " + default_scene.genY + ", " + this.s.y + ", " + this.vy);
         //console.log("Y:: " + Math.round((this.s.x-Sprite.qSize)/Sprite.size));
         if(this.s.y + this.vy < 0 || this.s.y + this.vy + Sprite.hSize > default_scene.mh || (Proj.wGen = default_scene.qid[Math.round((this.s.y + this.vy - default_scene.genY)/Sprite.size)][Math.round((this.s.x-Sprite.qSize)/Sprite.size)]) == 1 || (Proj.wGen == 2 && this.vy > 0)){
             if(this.vy > 0 && this.vy < .2/this.bounce) this.vy = 0;
@@ -71,7 +71,7 @@ export default class Proj{
         if(this.t == 2 && (this.spin -= del * Math.abs(this.vx + this.vy)) < 0) this.spin = 5, this.s.frame += this.s.frame == 3 ? -3 : 1;
         if((this.l -= del) <= 0) this.c = 0, this.g = -.4;
         if(this.h && this.c == 0){this.del(true); return;}
-        else if(!this.h && (Math.abs(this.vx) > 14 || Math.abs(this.vy) > 14)) for(var e of Enemy.List) if(e.check(this)){
+        else if(!this.h && (this.t == 2 || Math.abs(this.vx) > 14 || Math.abs(this.vy) > 14)) for(var e of Enemy.List) if(e.check(this)){
             if(this.t == 0){
                 this.vx = -.1 * Math.sign(this.vx);
                 this.vy = -9; this.c = 0; this.g = -.4;
@@ -91,13 +91,14 @@ export default class Proj{
                     //default_scene.pvEnd();
                     //default_scene.vx = default_scene.px; default_scene.vy = default_scene.py;
                     //default_scene.px = default_scene.py = 0;
+                    if(default_scene.grounded && default_scene.py > 0) default_scene.py = 0;
                     default_scene.vy = default_scene.py;
                     default_scene.py = 0;
                 }
                 this.vx *= -.1; this.vy = -5; this.c = 0; this.g = -.4;
                 default_scene.parrying = -1, default_scene.parryCool = this.h ? 5 : 40;
                 this.h = false; default_scene.camShake(2, 10);
-                default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "parry", loop: false, holdReference: false});
+                default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "bing", loop: false, holdReference: false});
             }else if(default_scene.parrying < 0 && this.h && this.hitPlayer()){
                 default_scene.damage();
                 this.del(true); return;
@@ -128,15 +129,26 @@ export default class Proj{
         }else switch(this.t){
             case 0: default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "bounce", loop: false, holdReference: false}); break;
             case 1: if(this.c > 0) this.del(); break;
-            case 2: this.c = 0; break;
+            case 2: this.c = 0; this.f = true; default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "parry", loop: false, holdReference: false}); break;
         }
         if(--this.c <= 0) this.g = -.4;
         //else if(this.f) this.del(true);
     }
     public static explo(source: Sprite){
-        //explo particle effects here:
-        
-        for(var e of Enemy.List) if(default_scene.distance(e.s, source) <= 10) e.hurt(5);
-        if(default_scene.distance(default_scene.Player, source)) default_scene.damage();
+        console.log("BOOM!");
+        for(var e of Enemy.List) if(default_scene.distance(e.s, source) <= Sprite.ExRange) e.hw = 0, e.hurt(5);
+        //if(default_scene.distance(default_scene.Player, source)) default_scene.damage(); //not yet
+        //explo effects here:
+        default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "explo", loop: false, holdReference: false});
+        Particle.Cloud(source.x+Sprite.qSize, source.y+Sprite.qSize, 100, 50, '#111', 50, .4, 10, 30);
+        source.frames = default_scene.booms;
+        source.frame = 0;
+        source.move(-2*Sprite.size, -2*Sprite.size);
+        source.explo();
+        default_scene.camShake(3, 10);
+    }
+    static Clear(){
+        for(var p of Proj.List) Proj.List[0].del(true);
+        Proj.List = [];
     }
 }

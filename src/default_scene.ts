@@ -31,7 +31,7 @@ export default class default_scene extends Scene{
     public static ctx: CanvasRenderingContext2D;
     public static mr: DOMRect;
 
-    private static mapRef: string[] = [' ', '-', '_', 'g', 's', '.', 'f'];
+    private static mapRef: string[] = [' ', '-', '_', 'g', 's', 'f', '.'];
     private static tiles: HTMLImageElement[] = [];
     private static grid: string[][];
 
@@ -39,7 +39,7 @@ export default class default_scene extends Scene{
     public Tar: Sprite;
     public Count: Sprite;
     public Ball: Sprite;
-    public kBall: Sprite;
+    public static kBall: Sprite;
     public dTrail: Sprite[] = [];
     public static dots: Sprite[] = [];
 
@@ -98,7 +98,7 @@ export default class default_scene extends Scene{
 
     public static hasBall: number = -1;
     public static isCurving: number = 0;
-    public grounded: boolean = true;
+    public static grounded: boolean = true;
     public hk: boolean = false;
     public static kp: boolean;
     public static emitter: Emitter = new Emitter();
@@ -132,10 +132,19 @@ export default class default_scene extends Scene{
     static titleHelper: any;
     static streak: number;
     static selArrow: Sprite;
+    static boom: Sprite;
+    static booms: any[];
+    static hw: number;
+    static level: number = 1;
 
     loadScene(): void {
         //this.load.image("logo", "demo_assets/images/wolfie2d_text.png");
-        //this.load.object("level1", "levels/level1.txt");
+        this.load.object("level1", "levels/level1.json");
+        this.load.object("level2", "levels/level2.json");
+        //this.load.object("level3", "levels/level3.json");
+        //this.load.object("level4", "levels/level4.json");
+        //this.load.object("level5", "levels/level5.json");
+        //this.load.object("level6", "levels/level6.json");
         this.load.audio("bounce", "sounds/ball kick.aac");
         this.load.audio("parry", "sounds/parry.aac");
         this.load.audio("spit", "sounds/mob sound.aac");
@@ -149,6 +158,9 @@ export default class default_scene extends Scene{
         this.load.audio("note3", "sounds/note1.mp3");
         this.load.audio("note4", "sounds/note1.mp3");
         this.load.audio("note5", "sounds/note1.mp3");
+        this.load.audio("explo", "sounds/explo.mp3");
+        this.load.audio("bing", "sounds/bing.mp3");
+        this.load.audio("supply", "sounds/supply.mp3");
 
         var myFont = new FontFace('myFont', 'url(fonts/PressStart2P-Regular.ttf)');
         myFont.load().then(function(font){
@@ -186,14 +198,14 @@ export default class default_scene extends Scene{
         });
         //this.addLayer("primary", 1);
         //console.log("TEST CTX::: " + default_scene.ctx);
-        default_scene.Player = new Sprite("pn", true, 14, 32, 64);
+        default_scene.Player = new Sprite("pn", true, 15, 32, 64);
         this.Tar = new Sprite("tar");
-        this.kBall = new Sprite("ball");
+        default_scene.kBall = new Sprite("ball");
         this.Count = new Sprite("count", false, 3);
         this.Count.hide();
-        this.kBall.hide();
+        default_scene.kBall.hide();
         for(var i = 0; i < default_scene.hp; i++){
-            default_scene.hearts.push(new Sprite("heart", false, 2, Sprite.hSize*1.1*i));
+            default_scene.hearts.push(new Sprite("heart", false, 2, Sprite.size*1.1*i));
             default_scene.hearts[i].setUI();
         }
         var icon = new Sprite("ballIcon", false, -1, Sprite.hSize, default_scene.ch-Sprite.size*2);
@@ -214,6 +226,11 @@ export default class default_scene extends Scene{
         default_scene.titleHelper.setUI();
         default_scene.titleHelper.hide();
 
+        default_scene.boom = new Sprite("boom", false, 3);
+        default_scene.boom.hide();
+        default_scene.booms = default_scene.boom.frames;
+        default_scene.boom.del(); //just an example to get the boom images into Loaded
+
         default_scene.selArrow = new Sprite("selArrow");
         default_scene.selArrow.setPos(Sprite.hSize, default_scene.ch-Sprite.size*3-Sprite.hSize);
         default_scene.selArrow.setUI();
@@ -224,18 +241,21 @@ export default class default_scene extends Scene{
         }
 
         //this.build(this.load.getObject("level1").toString());
-        this.build('                              -----                            -            0-,                               ---                             -            --,                                -                              -          0- -,                                                               -          -  -,-                                                              -        0-   -,-                                                              -        -    -,-                                                              -       -     -,-_-                                                            -      -      -,                                                               -     -       -,                ___                                            -    -        -,                                                               -   -         -,                                                               -  -          -,                                                               - -           -,                             ___-                              -             -,                                -                              --            -,                                -                              - -           -,                                -    0   -                     -  -          -,                                -_________                     -   -         -,                                -                              -    -        -,                                -                    - -0- -         -        ,                                ---                  -------          -       ,     .                          -  --                  ---             -      ,            -                   -    _-                ---              -    f,-          --    s   g   0      -0     --              ---                   -,-------------------------------------------------------------------------------');
+        this.build(this.load.getObject("level1")["map"].toString());
+        //this.build('                              -----                            -            0-,                               ---                             -            --,                                -                              -          0- -,                                                               -          -  -,-                                                              -        0-   -,-                                                              -        -    -,-                                                              -       -     -,-_-                                                            -      -      -,                                                               -     -       -,                ___                                            -    -        -,                                                               -   -         -,                                                               -  -          -,                                                               - -           -,                             ___-                              -             -,                                -                              --            -,                                -                              - -           -,                                -    0   -                     -  -          -,                                -_________                     -   -         -,                                -                              -    -        -,                                -                    - -0- -         -        ,                                ---                  -------          -       ,     .                          -  --                  ---             -      ,            -                   -    _-                ---              -    f,-          --    s   g   0      -0     --              ---                   -,-------------------------------------------------------------------------------');
         //default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "bgm", loop: true, holdReference: true});
     }
 
     updateScene(delta: number): void {
         if(default_scene.toLoad > 0) return;
         if(default_scene.pey[231]){
-            default_scene.godMode = true;
-            console.log("GOD MODE ACTIVATED --> NO DAMAGE");
+            //default_scene.godMode = true;
+            //console.log("GOD MODE ACTIVATED --> NO DAMAGE");
+            console.log(default_scene.titleHelper.sx + ", " + default_scene.hearts[0].x + ", " + default_scene.ctx.font);
         }
         this.del = delta*50;
         if(default_scene.hasBall > 0) default_scene.hasBall -= this.del;
+        if(default_scene.hw > 0) default_scene.hw -= this.del;
         default_scene.ctx.clearRect(0, 0, default_scene.cw, default_scene.ch);
         default_scene.ctx.fillStyle = '#333';
         default_scene.ctx.fillRect(0, 0, default_scene.cw, default_scene.ch);
@@ -254,14 +274,14 @@ export default class default_scene extends Scene{
                 this.dTrail = [];
             }
         }else{
-            for(var i = 49; i < 52; i++) if(default_scene.pey[i]){
+            if(this.throwing == 0) for(var i = 49; i < 52; i++) if(default_scene.pey[i]){
                 this.bSel = i-49;
                 default_scene.selArrow.x = Sprite.hSize + Sprite.size*(i-49);
                 //animation for switching
             }
 
             this.walk = (+default_scene.key[68] - +default_scene.key[65]);
-            if((this.kicking > 0 || (default_scene.parrying -= this.del) >= 0) && this.grounded) this.walk = 0;
+            if((this.kicking > 0 || (default_scene.parrying -= this.del) >= 0) && default_scene.grounded) this.walk = 0;
             if(this.walk != 0 && (this.walking -= this.del) < 0) this.walking = 5, this.wf += this.wDir, this.wDir *= +(this.wf == 2)*2-1;
             default_scene.Player.frame = this.wf;
             if(default_scene.key[65]) default_scene.Player.flip = true;
@@ -280,13 +300,27 @@ export default class default_scene extends Scene{
             if(this.wGen > 2){
                 if(this.wGen < 5){
                     this.ammo[this.wGen-2] += (this.wGen-2)*5;
+                    default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "supply", loop: false, holdReference: false});
                     default_scene.qid[Math.round(default_scene.Player.y/this.size)][Math.round(default_scene.Player.x/this.size)] = 0;
                 }else if(default_scene.pey[87]){
-                    console.log('BUILD NEW LEVEL!!!');
+                    //default_scene.toLoad++;
+                    //console.log('BUILD NEW LEVEL!!!');
+                    default_scene.grid = [];
+                    default_scene.qid = [];
+                    //Sprite.Clear();
+                    Enemy.Clear();
+                    Particle.Clear();
+                    Proj.Clear();
+                    default_scene.level++;
+                    //console.log("/levels/level"+default_scene.level+".json");
+                    //this.load.object("level"+default_scene.level, "/levels/level"+default_scene.level+".json");
+                    this.build(this.load.getObject("level"+default_scene.level)["map"].toString());
+                    default_scene.kBall.hide();
+                    //default_scene.toLoad--;
                 }
             }
             this.wallCheck(true);
-            if(!this.grounded){
+            if(!default_scene.grounded){
                 if(default_scene.kp && default_scene.dashing < 0 && default_scene.dead == 1) default_scene.vy += this.del * .5, default_scene.Player.frame = default_scene.vy < 0 ? 7 : 8;
                 if(default_scene.vy < 0 || default_scene.py < 0){
                     if(default_scene.Player.y + default_scene.vy + default_scene.py - this.qSize < 0) this.dashY = default_scene.vy = default_scene.py = 0, default_scene.Player.y = .01;
@@ -295,13 +329,13 @@ export default class default_scene extends Scene{
                     else this.wallCheck(false);
                 }else{
                     var curCheck;
-                    if((curCheck = default_scene.qid[this.wGen = Math.floor((default_scene.Player.y+this.size+default_scene.vy+default_scene.py)/this.size)][Math.round(default_scene.Player.x/this.size)]) == 1 || curCheck == 2) this.grounded = true, default_scene.px = default_scene.py = 0, default_scene.pvEnd(), this.dashY = default_scene.vy = 0, default_scene.Player.y = (this.wGen-1)*this.size;
+                    if((curCheck = default_scene.qid[this.wGen = Math.floor((default_scene.Player.y+this.size+default_scene.vy+default_scene.py)/this.size)][Math.round(default_scene.Player.x/this.size)]) == 1 || curCheck == 2) default_scene.grounded = true, default_scene.px = default_scene.py = 0, default_scene.pvEnd(), this.dashY = default_scene.vy = 0, default_scene.Player.y = (this.wGen-1)*this.size;
                     this.wallCheck(false);
                 }
             }else if(default_scene.dashing < 0 && default_scene.key[32] && default_scene.qid[this.wGen = Math.floor((default_scene.Player.y-this.qSize)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] != 1 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] != 1){
                 default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "jump", loop: false, holdReference: false});
-                this.grounded = false; default_scene.vy = -8;
-            }else if(default_scene.qid[this.wGen = Math.round((default_scene.Player.y+this.size)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 0 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 0) this.grounded = false, default_scene.vy = 0;
+                default_scene.grounded = false; default_scene.vy = -8;
+            }else if(default_scene.qid[this.wGen = Math.round((default_scene.Player.y+this.size)/this.size)][Math.floor((default_scene.Player.x+this.qSize)/this.size)] == 0 && default_scene.qid[this.wGen][Math.ceil((default_scene.Player.x-this.qSize)/this.size)] == 0) default_scene.grounded = false, default_scene.vy = 0;
 
             if(default_scene.parrying >= 0) default_scene.Player.frame = 12;
             else if(default_scene.parryCool > 0){
@@ -324,7 +358,7 @@ export default class default_scene extends Scene{
                 this.dashX = this.getDash(i, true); this.dashY = this.getDash(i, false);
                 if(default_scene.key[this.doubles[this.wGen = this.wrap(i+1, 4)]] || default_scene.key[this.doubles[this.wGen = this.wrap(i-1, 4)]]) this.dashX += this.getDash(this.wGen, true), this.dashY += this.getDash(this.wGen, false), this.dashX *= .707, this.dashY *= .707;
                 default_scene.dashing = 30; this.dashCool = 40;
-                if(this.dashY > 0 && this.grounded) this.dashY = 0;
+                if(this.dashY > 0 && default_scene.grounded) this.dashY = 0;
                 this.doubles[i+4] = 0; default_scene.pvEnd(); break;
             }
         }
@@ -332,16 +366,19 @@ export default class default_scene extends Scene{
         if((default_scene.key[81] && this.kicking == 0 && default_scene.parrying < 0 && default_scene.hasBall < 0) || this.throwing > 0){
             if(this.throwing == 0){
                 if(this.ammo[this.bSel] == 0) this.throwing = -this.del;
-                else this.ammo[this.bSel]--;
-                if(this.bSel == 0){
-                    if(this.kBall.hidden) this.kBall.setPos(default_scene.Player.x, default_scene.Player.y);
-                    (this.Ball = this.kBall).show();
-                }else{
-                    this.Ball = new Sprite(this.bSel == 1 ? "grenade" : "sword", false, this.bSel == 0 ? -1 : (this.bSel == 1 ? 2 : 4));
-                    this.Ball.setPos(default_scene.Player.x, default_scene.Player.y);
+                else{
+                    this.ammo[this.bSel]--;
+                    if(this.bSel == 0){
+                        if(default_scene.kBall.hidden) default_scene.kBall.setPos(default_scene.Player.x, default_scene.Player.y);
+                        (this.Ball = default_scene.kBall).show();
+                        this.Ball.show();
+                    }else{
+                        this.Ball = new Sprite(this.bSel == 1 ? "grenade" : "sword", false, this.bSel == 0 ? -1 : (this.bSel == 1 ? 2 : 4));
+                        this.Ball.setPos(default_scene.Player.x, default_scene.Player.y);
+                    }
+                    //Count.show();
+                    this.Ball.moveTo(this.Tar, 25, -this.qSize, -this.qSize);
                 }
-                //Count.show();
-                this.Ball.moveTo(this.Tar, 25, -this.qSize, -this.qSize);
             }
             this.throwing = Math.min(25, this.throwing + this.del);
             this.thl = Math.floor(this.throwing / 8);
@@ -354,7 +391,7 @@ export default class default_scene extends Scene{
                 this.Ball.setPos(this.Tar.x-this.qSize, this.Tar.y-this.qSize);
                 if(this.Ball.p == undefined) new Proj(this.Ball, this.mdx * this.thl, this.mdy * this.thl, 0, this.bSel);
                 else this.Ball.p.setAll(this.Ball, this.mdx * this.thl, this.mdy * this.thl, 0, this.bSel);
-                this.Count.hide(); default_scene.hasBall = 50;
+                this.Count.hide(); default_scene.hasBall = 20;
                 this.Count.sh = this.throwing = 0; 
             }//else Player.frame = thfr + thl;
             default_scene.Player.flip = this.mdx < 0;
@@ -369,18 +406,18 @@ export default class default_scene extends Scene{
                 if(this.kicking < 275) this.kicking = -50; //wiff for real
                 else if(default_scene.kl != undefined){
                     this.hk = true;
-                    default_scene.kl.del();
+                    default_scene.kl.del(false, true); //delete the proj with explo safety
                     default_scene.kl.vx = default_scene.kl.vy = default_scene.kl.sx = default_scene.kl.sy = 0;
                     default_scene.kl.s.shake(5, 290);
                     default_scene.kl.s.moveTo(this.Tar, 290, -this.qSize, -this.qSize);
                     this.Count.show();
                 }
-            }else if(this.hk && (!default_scene.key[230] || this.kicking < 0)){ //release (proj)
+            }else if(this.hk && (!default_scene.key[230] || this.kicking < 0)){ //release proj
                 default_scene.kl.s.shake(); default_scene.kl.s.moveTo(undefined);
                 default_scene.kl.s.setPos(this.Tar.x-this.qSize, this.Tar.y-this.qSize);
                 default_scene.kl.vx = this.mdx * 20; default_scene.kl.vy = this.mdy * 20;
                 default_scene.kl.sx = default_scene.curveX; default_scene.kl.sy = default_scene.curveY;
-                default_scene.kl.c = default_scene.kl.en ? 0 : Math.min(this.thl, 3), default_scene.kl.g = 0;
+                default_scene.kl.c = default_scene.kl.en ? 0 : Math.min(this.thl+1, 3), default_scene.kl.g = 0;
                 this.Count.hide(); this.Count.shake(undefined);
                 this.Count.frame = default_scene.vy = 0;
                 Proj.List.push(default_scene.kl);
@@ -419,9 +456,11 @@ export default class default_scene extends Scene{
             default_scene.ctx.globalCompositeOperation = 'xor';
             default_scene.ctx.fillText("Press R to Restart", default_scene.hcw, default_scene.hch);
             default_scene.ctx.globalCompositeOperation = 'source-over';
+            default_scene.ctx.textAlign = 'left';
             if((default_scene.dead -= this.del * .01) < 0) default_scene.dead = 0;
             if(default_scene.pey[82]){ //RESTART LEVEL!!!
                 default_scene.dead = 1;
+                default_scene.deathMark.setPos(0, 0);
                 default_scene.Player.moveTo(undefined);
                 default_scene.hp = default_scene.maxHP;
                 for(var h of default_scene.hearts) h.frame = 0;
@@ -437,11 +476,13 @@ export default class default_scene extends Scene{
             Enemy.Run(this.del);
             Proj.Run(this.del);
         }
+        if(default_scene.hw > 20) default_scene.Player.frame = 14;
         Sprite.Run(this.del);
         Particle.Run(this.del);
         //UI LAYER:::
         Sprite.UIRun(this.del);
         if(default_scene.multiplier > 0){
+            default_scene.ctx.textAlign = 'left';
             default_scene.ctx.fillStyle = default_scene.colRef[default_scene.multiplier-1];
             default_scene.ctx.fillRect(0, default_scene.hch, (Sprite.size*5) * (default_scene.multTimer/default_scene.maxTimer), Sprite.qSize/2);
             default_scene.ctx.font = "10px myFont";
@@ -454,9 +495,9 @@ export default class default_scene extends Scene{
         default_scene.ctx.font = "20px myFont";
         default_scene.ctx.fillText(Math.round(default_scene.displayScore).toString(), Sprite.qSize, default_scene.hch+Sprite.hSize);
 
-        default_scene.ctx.font = "10px myFont";
-        for(var i = 1; i < 3; i++){
-            default_scene.ctx.fillText(this.ammo[i].toString(), Sprite.hSize + Sprite.size*i, default_scene.ch-Sprite.size*2);
+        if(default_scene.dead == 1){
+            default_scene.ctx.font = "10px myFont";
+            for(var i = 1; i < 3; i++) default_scene.ctx.fillText(this.ammo[i].toString(), Sprite.hSize + Sprite.size*i, default_scene.ch-Sprite.size*2);
         }
 
         default_scene.pey = [];
@@ -466,8 +507,8 @@ export default class default_scene extends Scene{
         this.score += s * Math.max(this.multiplier, 1);
         this.multTimer = this.maxTimer;
         if(this.streak >= this.multiplier*100){ //multiplier up
-            this.multiplier++; 
-            this.titleHelper.x = -this.hcw; //might be tooo far left
+            this.multiplier = Math.min(this.multiplier+1, 5);
+            this.titleHelper.x = -this.hcw; //might be too far left
             this.titleHelper.moveTo(this.hearts[0], 20, 0, this.hch-Sprite.size);
             this.titleHelper.shake(this.multiplier, this.maxTimer*2);
             default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "note"+this.multiplier, loop: false, holdReference: false});
@@ -509,12 +550,12 @@ export default class default_scene extends Scene{
         for(var i = 0; i < default_scene.grid.length; i++){ //build qid and decide what images to load / unload
             default_scene.qid.push([]);
             for(var n = 0; n < default_scene.grid[i].length; n++){
-                if((mGen = default_scene.mapRef.indexOf(default_scene.grid[i][n])) > 4 || mGen == -1) switch(default_scene.grid[i][n]){
+                if((mGen = default_scene.mapRef.indexOf(default_scene.grid[i][n])) > 5 || mGen == -1) switch(default_scene.grid[i][n]){
                     case '.': default_scene.PlayerStart(n*this.size, i*this.size); break;
-                    case 'f': break;
+                    //case 'f': new Sprite("door", false, -1, n*this.size, i*this.size); break;
                     default: new Enemy(n*this.size, i*this.size, parseInt(default_scene.grid[i][n])); mGen = 0; break; //Enemy placement
                 }
-                default_scene.qid[default_scene.qid.length-1].push(mGen > 4 ? 0 : mGen);
+                default_scene.qid[default_scene.qid.length-1].push(mGen > 5 ? 0 : mGen);
                 loads[default_scene.qid[i][n]] = true;
             }
         }
@@ -541,6 +582,7 @@ export default class default_scene extends Scene{
         default_scene.ctx.drawImage(default_scene.tiles[default_scene.qid[y][x]], x*this.size - default_scene.camX - default_scene.shCamX, y*this.size - default_scene.camY - default_scene.shCamY);
     }
     public static damage(): void{
+        if(this.hw > 0) return;
         if(!this.godMode) default_scene.hp--;
         console.log("OUCH!!! --> took damage! " + default_scene.hp);
         if(default_scene.hp == 0) this.die();
@@ -548,6 +590,7 @@ export default class default_scene extends Scene{
             default_scene.emitter.fireEvent(GameEventType.PLAY_SOUND, {key: "hurt", loop: false, holdReference: false});
             default_scene.hearts[Math.max(default_scene.hp, 0)].frame = 1;
         }
+        this.hw = 50;
     }
     public static PlayerStart(a = -1, b = -1){
         if(a == -1){
@@ -567,6 +610,8 @@ export default class default_scene extends Scene{
     }
     private static die(): void{
         console.log("DEAD!!!");
+        default_scene.streak = 0;
+        default_scene.multiplier = 0;
         default_scene.dead -= .0001;
         for(var i = 0; i < default_scene.key.length; i++) default_scene.key[i] = false; //clear key inputs
         default_scene.emitter.fireEvent(GameEventType.STOP_SOUND, {key: "bgm"});

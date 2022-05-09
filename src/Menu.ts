@@ -1,5 +1,6 @@
 import default_scene from "./default_scene";
 import Vec2 from "./Wolfie2D/DataTypes/Vec2";
+import { GameEventType } from "./Wolfie2D/Events/GameEventType";
 import { GraphicType } from "./Wolfie2D/Nodes/Graphics/GraphicTypes";
 import Label from "./Wolfie2D/Nodes/UIElements/Label";
 import { UIElementType } from "./Wolfie2D/Nodes/UIElements/UIElementTypes";
@@ -15,26 +16,32 @@ export default class Menu extends Scene {
     private control: Layer;
     private cheatCodes: Layer;
 
-    loadScene(){}
+    loadScene(){
+        this.load.audio("menuTheme", "sounds/main menu.mp3");
+        this.load.image("logo", "images/KillBallLogo.png");
+    }
 
     startScene(){
+        default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "menuTheme", loop: true, holdReference: true});
+
         const center = this.viewport.getCenter();
 
         // The main menu
         this.mainMenu = this.addUILayer("mainMenu");
 
-        //const logo = this.add.sprite("./dist/images/KillBallLogo.png", "mainMenu");
+        const logo = this.add.sprite("logo", "mainMenu");
         //logo.size.set(200, 50);
+        logo.position.set(600, 150);
 
         // Add play button, and give it an event to emit on press
-        const play = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y - 100), text: "New Game"});
+        const play = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x, center.y - 50), text: "New Game"});
         play.size.set(200, 50);
         play.borderWidth = 2;
         play.borderColor = Color.WHITE;
         play.backgroundColor = Color.TRANSPARENT;
         play.onClickEventId = "play";
 
-        const cheats = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x + 300, center.y - 100), text: "CHEAT CODES"});
+        const cheats = this.add.uiElement(UIElementType.BUTTON, "mainMenu", {position: new Vec2(center.x + 300, center.y - 50), text: "CHEAT CODES"});
         cheats.size.set(200, 50);
         cheats.borderWidth = 2;
         cheats.borderColor = Color.WHITE;
@@ -194,5 +201,9 @@ export default class Menu extends Scene {
             }
 
         }
+    }
+
+    unloadScene(){
+        default_scene.emitter.fireEvent(GameEventType.STOP_SOUND, {key: "menuTheme"});
     }
 }

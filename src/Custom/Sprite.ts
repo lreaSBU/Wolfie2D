@@ -6,6 +6,8 @@ export default class Sprite{
     public static size: number = 32;
     public static hSize: number = Sprite.size/2;
     public static qSize: number = Sprite.hSize/2;
+    public static Safety: number = Sprite.size * 3;
+    public static ExRange: number = Sprite.size * 4;
 
     public static Loaded: any[] = [];
     public static List: Sprite[] = [];
@@ -13,6 +15,7 @@ export default class Sprite{
     private static genString: string;
     public static genEx: any[];
     public static genImg: any;
+    public static exRate: number = 5;
 
     public frames: any[];
     public flips: any[];
@@ -37,6 +40,8 @@ export default class Sprite{
     public ox: number = 0;
     public oy: number = 0;
     public p: Proj;
+    public ex: number = 0;
+    public exp: boolean;
 
     constructor(name: string, dof = false, fr = -1, x = 0, y = 0){
         this.frames = [];
@@ -91,7 +96,17 @@ export default class Sprite{
         for(var s of Sprite.UIList) s.run(del);
         default_scene.ctx.globalAlpha = 1;
     }
+    static Clear(u = false){
+        for(var s of Sprite.List){
+            console.log(s.frames[0].src);
+            if(s.frames[0].src.split('sword').length > 1) s.del();
+        }
+    }
     run(del: number){
+        if(this.exp && (this.ex += del) > Sprite.exRate){
+            this.ex -= Sprite.exRate;
+            if(++this.frame == this.frames.length){this.del(); return;}
+        }
         if(this.sh){
             this.sx = default_scene.rand(this.sh);
             this.sy = default_scene.rand(this.sh);
@@ -109,6 +124,10 @@ export default class Sprite{
             if((this.rt -= del) < 0) this.rot = undefined;
         }
         if(this.hidden) return;
+        if(!this.ui){
+            if(this.x+this.sx < default_scene.camX-Sprite.Safety || this.x+this.sx > default_scene.camX+default_scene.cw+Sprite.Safety) return; //dont render out of camera bounds
+            if(this.y+this.sy < default_scene.camY-Sprite.Safety || this.y+this.sy > default_scene.camY+default_scene.ch+Sprite.Safety) return;
+        }
         default_scene.ctx.globalAlpha = this == default_scene.Player ? 1 : this.alpha * default_scene.dead;
         if(this.ui) default_scene.ctx.drawImage(this.flip ? this.flips[this.frame] : this.frames[this.frame], this.x+this.sx, this.y+this.sy);
         else default_scene.ctx.drawImage(this.flip ? this.flips[this.frame] : this.frames[this.frame], this.x+this.sx-default_scene.camX-default_scene.shCamX, this.y+this.sy-default_scene.camY-default_scene.shCamY);
@@ -164,5 +183,10 @@ export default class Sprite{
     }
     toString(){
         return this.getImage().src;
+    }
+    explo(){
+        this.exp = true;
+        this.moveTo(undefined);
+        this.shake(5, Sprite.exRate*this.frames.length);
     }
 }
