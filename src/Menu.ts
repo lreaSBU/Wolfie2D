@@ -111,8 +111,8 @@ export default class Menu extends Scene {
         const ctext3 = "Q :: Toss Ball (Hold to Throw Harder)";
         const ctext5 = "LEFT MOUSE :: Kick Ball (Hold to Build Power)";
         const ctext6 = "SPACE :: Jump";
-        const ctext7 = "SHIFT :: Parry";
-        const ctext8 = "NUM 1-3 :: Swap Ball (not implemented yet)";
+        const ctext7 = "SHIFT :: Parry (Hold During Kick to Curve Shot)";
+        const ctext8 = "NUM 1-3 :: Swap Weapon";
 
         //const cline1 = <Label>this.add.uiElement(UIElementType.LABEL, "control", {position: new Vec2(center.x, center.y - 200), text: ctext1});
         const cline2 = <Label>this.add.uiElement(UIElementType.LABEL, "control", {position: new Vec2(center.x, center.y - 100), text: ctext2});
