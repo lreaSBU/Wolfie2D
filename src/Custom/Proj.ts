@@ -60,14 +60,16 @@ export default class Proj{
         default_scene.genY = this.vy < 0 ? Sprite.hSize : 0;
         //console.log("X:: " + Math.round((this.s.y + this.vy - default_scene.genY)/Sprite.size) + ", " + default_scene.genY + ", " + this.s.y + ", " + this.vy);
         //console.log("Y:: " + Math.round((this.s.x-Sprite.qSize)/Sprite.size));
-        if(this.s.y + this.vy < 0 || this.s.y + this.vy + Sprite.hSize > default_scene.mh || (Proj.wGen = default_scene.qid[Math.round((this.s.y + this.vy - default_scene.genY)/Sprite.size)][Math.round((this.s.x-Sprite.qSize)/Sprite.size)]) == 1 || (Proj.wGen == 2 && this.vy > 0)){
-            if(this.vy > 0 && this.vy < .2/this.bounce) this.vy = 0;
-            this.vy *= -.8 * this.bounce; this.vx *= .9 * this.bounce;
-            this.doBounce();
-        }else if(this.s.x + this.vx < 0 || this.s.x + this.vx + Sprite.hSize > default_scene.mw || default_scene.qid[Math.round((this.s.y-Sprite.qSize)/Sprite.size)][Proj.wGen = Math.round((this.s.x + this.vx - default_scene.genX)/Sprite.size)] == 1){
-            this.vx *= -.8 * this.bounce; this.vy *= .9 * this.bounce;
-            this.doBounce();
-        }
+        try{
+            if(this.s.y + this.vy < 0 || this.s.y + this.vy + Sprite.hSize > default_scene.mh || (Proj.wGen = default_scene.qid[Math.round((this.s.y + this.vy - default_scene.genY)/Sprite.size)][Math.round((this.s.x-Sprite.qSize)/Sprite.size)]) == 1 || (Proj.wGen == 2 && this.vy > 0)){
+                if(this.vy > 0 && this.vy < .2/this.bounce) this.vy = 0;
+                this.vy *= -.8 * this.bounce; this.vx *= .9 * this.bounce;
+                this.doBounce();
+            }else if(this.s.x + this.vx < 0 || this.s.x + this.vx + Sprite.hSize > default_scene.mw || default_scene.qid[Math.round((this.s.y-Sprite.qSize)/Sprite.size)][Proj.wGen = Math.round((this.s.x + this.vx - default_scene.genX)/Sprite.size)] == 1){
+                this.vx *= -.8 * this.bounce; this.vy *= .9 * this.bounce;
+                this.doBounce();
+            }
+        }catch(e){}
         if(this.t == 2 && (this.spin -= del * Math.abs(this.vx + this.vy)) < 0) this.spin = 5, this.s.frame += this.s.frame == 3 ? -3 : 1;
         if((this.l -= del) <= 0) this.c = 0, this.g = -.4;
         if(this.h && this.c == 0){this.del(true); return;}
@@ -148,7 +150,7 @@ export default class Proj{
         default_scene.camShake(3, 10);
     }
     static Clear(){
-        for(var p of Proj.List) Proj.List[0].del(true);
+        for(var p of Proj.List) if(p.s != default_scene.kBall) p.s.del();
         Proj.List = [];
     }
 }

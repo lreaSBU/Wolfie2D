@@ -141,10 +141,10 @@ export default class default_scene extends Scene{
         //this.load.image("logo", "demo_assets/images/wolfie2d_text.png");
         this.load.object("level1", "levels/level1.json");
         this.load.object("level2", "levels/level2.json");
-        //this.load.object("level3", "levels/level3.json");
-        //this.load.object("level4", "levels/level4.json");
-        //this.load.object("level5", "levels/level5.json");
-        //this.load.object("level6", "levels/level6.json");
+        this.load.object("level3", "levels/level3.json");
+        this.load.object("level4", "levels/level4.json");
+        this.load.object("level5", "levels/level5.json");
+        this.load.object("level6", "levels/level6.json");
         this.load.audio("bounce", "sounds/ball kick.aac");
         this.load.audio("parry", "sounds/parry.aac");
         this.load.audio("spit", "sounds/mob sound.aac");
@@ -241,9 +241,9 @@ export default class default_scene extends Scene{
         }
 
         //this.build(this.load.getObject("level1").toString());
-        this.build(this.load.getObject("level1")["map"].toString());
+        this.build(this.load.getObject("level"+default_scene.level)["map"].toString());
         //this.build('                              -----                            -            0-,                               ---                             -            --,                                -                              -          0- -,                                                               -          -  -,-                                                              -        0-   -,-                                                              -        -    -,-                                                              -       -     -,-_-                                                            -      -      -,                                                               -     -       -,                ___                                            -    -        -,                                                               -   -         -,                                                               -  -          -,                                                               - -           -,                             ___-                              -             -,                                -                              --            -,                                -                              - -           -,                                -    0   -                     -  -          -,                                -_________                     -   -         -,                                -                              -    -        -,                                -                    - -0- -         -        ,                                ---                  -------          -       ,     .                          -  --                  ---             -      ,            -                   -    _-                ---              -    f,-          --    s   g   0      -0     --              ---                   -,-------------------------------------------------------------------------------');
-        //default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "bgm", loop: true, holdReference: true});
+        default_scene.emitter.fireEvent(GameEventType.PLAY_MUSIC, {key: "bgm", loop: true, holdReference: true});
     }
 
     updateScene(delta: number): void {
@@ -305,6 +305,7 @@ export default class default_scene extends Scene{
                 }else if(default_scene.pey[87]){
                     //default_scene.toLoad++;
                     //console.log('BUILD NEW LEVEL!!!');
+                    default_scene.camX = default_scene.camY = 0;
                     default_scene.grid = [];
                     default_scene.qid = [];
                     //Sprite.Clear();
